@@ -1,0 +1,137 @@
+# Алгоритм: Банкротство физических лиц (бесплатная консультация)
+algorithm:
+  name: "Консультация по банкротству физических лиц"
+  direction: "bankruptcy"
+  version: "1.0"
+  description: "Алгоритм сбора информации для консультации по банкротству"
+  is_paid: false
+  
+  steps:
+    - id: "greeting"
+      type: "text"
+      title: "Приветствие"
+      content: |
+        👋 Здравствуйте! Я помогу вам разобраться с вопросом о банкротстве физических лиц.
+        
+        <i>Консультация бесплатная.</i>
+      next_step: "problem_status"
+      
+    - id: "problem_status"
+      type: "question"
+      title: "Статус проблемы"
+      content: "У вас уже есть проблема с долгами, или вы хотите получить консультацию?"
+      buttons:
+        - text: "Да, есть проблема"
+          value: "has_problem"
+          next_step: "debt_amount"
+        - text: "Только консультация"
+          value: "consultation_only"
+          next_step: "debt_amount"
+        - text: "◀ Назад"
+          value: "back"
+          next_step: "greeting"
+      
+    - id: "debt_amount"
+      type: "question"
+      title: "Размер долга"
+      content: "Какая примерная сумма вашего долга?"
+      buttons:
+        - text: "Менее 100 000 ₽"
+          value: "small"
+          next_step: "creditor_count"
+        - text: "100 000 - 1 000 000 ₽"
+          value: "medium"
+          next_step: "creditor_count"
+        - text: "Более 1 000 000 ₽"
+          value: "large"
+          next_step: "creditor_count"
+        - text: "◀ Назад"
+          value: "back"
+          next_step: "problem_status"
+      
+    - id: "creditor_count"
+      type: "question"
+      title: "Количество кредиторов"
+      content: "Сколько у вас кредиторов?"
+      buttons:
+        - text: "1 кредитор"
+          value: "one"
+          next_step: "urgency"
+        - text: "2-5 кредиторов"
+          value: "few"
+          next_step: "urgency"
+        - text: "Более 5 кредиторов"
+          value: "many"
+          next_step: "urgency"
+        - text: "◀ Назад"
+          value: "back"
+          next_step: "debt_amount"
+      
+    - id: "urgency"
+      type: "question"
+      title: "Срочность"
+      content: "Как срочно вам нужна консультация?"
+      buttons:
+        - text: "Срочно (в течение дня)"
+          value: "urgent"
+          next_step: "contact_collection"
+        - text: "В течение недели"
+          value: "week"
+          next_step: "contact_collection"
+        - text: "Неспешно"
+          value: "not_urgent"
+          next_step: "contact_collection"
+        - text: "◀ Назад"
+          value: "back"
+          next_step: "creditor_count"
+      
+    - id: "contact_collection"
+      type: "contact"
+      title: "Контактные данные"
+      content: |
+        📝 Пожалуйста, укажите ваши контактные данные для связи.
+        
+        Отправьте сообщение в формате:
+        <b>Имя Фамилия, телефон, email</b>
+        
+        Пример: <i>Иван Иванов, +79991234567, ivan@mail.ru</i>
+      fields:
+        - name: "full_name"
+          type: "text"
+          label: "Полное имя"
+          required: true
+        - name: "phone"
+          type: "phone"
+          label: "Телефон"
+          required: true
+        - name: "email"
+          type: "email"
+          label: "Email"
+          required: false
+      next_step: "confirmation"
+      
+    - id: "confirmation"
+      type: "summary"
+      title: "Подтверждение"
+      content: |
+        ✅ <b>Спасибо! Ваша заявка принята.</b>
+        
+        Наш юрист свяжется с вами в ближайшее время.
+        
+        📋 Направление: Банкротство физлиц
+        👤 Контакты сохранены
+      next_step: "completed"
+      
+    - id: "completed"
+      type: "end"
+      title: "Завершено"
+      content: |
+        Спасибо за обращение! 🙏
+        
+        📋 Ваша заявка зарегистрирована
+        📞 Мы вам перезвоним
+        
+        <b>Команды:</b>
+        /start — Начать заново
+        /help — Справка
+      final_step: true

@@ -1,0 +1,73 @@
+# Основной алгоритм - выбор направления юридической услуги
+algorithm:
+  name: "Выбор направления консультации"
+  direction: "main"
+  version: "1.0"
+  description: "Выбор направления юридической услуги из 16 доступных"
+  is_paid: false
+  
+  steps:
+    - id: "greeting"
+      type: "text"
+      title: "Приветствие"
+      content: |
+        👋 <b>Здравствуйте!</b>
+        
+        Я — бот юридической консультации. Помогу вам записаться на консультацию к специалисту.
+        
+        📋 Выберите интересующее вас направление:
+      next_step: "direction_selection"
+      
+    - id: "direction_selection"
+      type: "question"
+      title: "Выбор направления"
+      content: "Выберите направление юридической услуги:"
+      buttons:
+        - text: "📉 Банкротство физлиц (бесплатно)"
+          value: "bankruptcy"
+          next_step: "load_direction"
+        - text: "🎖 Военный юрист"
+          value: "military"
+          next_step: "load_direction"
+        - text: "👨‍👩‍👧 Семейное право"
+          value: "family"
+          next_step: "load_direction"
+        - text: "🏥 Медицинское право"
+          value: "medical"
+          next_step: "load_direction"
+        - text: "📋 Пенсионные вопросы"
+          value: "pension"
+          next_step: "load_direction"
+        - text: "💼 Трудовые споры"
+          value: "labor"
+          next_step: "load_direction"
+        - text: "🛒 Защита прав потребителей"
+          value: "consumer"
+          next_step: "load_direction"
+        - text: "📜 Наследство"
+          value: "inheritance"
+          next_step: "load_direction"
+        - text: "💡 Интеллектуальная собственность"
+          value: "ip"
+          next_step: "load_direction"
+        - text: "🏠 Недвижимость"
+          value: "real_estate"
+          next_step: "load_direction"
+        - text: "🌾 Земельное право"
+          value: "land"
+          next_step: "load_direction"
+        - text: "🚗 Автоюрист"
+          value: "auto"
+          next_step: "load_direction"
+        - text: "⚖ Уголовные дела"
+          value: "criminal"
+          next_step: "load_direction"
+        - text: "💰 Налоги"
+          value: "tax"
+          next_step: "load_direction"
+        - text: "🏢 Бизнес-право"
+          value: "business"
+          next_step: "load_direction"
+        - text: "📊 Арбитраж"
+          value: "arbitration"
+          next_step: "load_direction"

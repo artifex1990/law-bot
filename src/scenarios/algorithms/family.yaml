@@ -1,0 +1,93 @@
+# Алгоритм: Семейное право
+algorithm:
+  name: "Консультация по семейному праву"
+  direction: "family"
+  version: "1.0"
+  is_paid: true
+  price: 5000
+  
+  steps:
+    - id: "greeting"
+      type: "text"
+      title: "Приветствие"
+      content: |
+        👋 Добро пожаловать на консультацию по семейному праву!
+        
+        Стоимость консультации: 5 000 ₽
+      next_step: "problem_type"
+    
+    - id: "problem_type"
+      type: "question"
+      title: "Вид проблемы"
+      content: "Какой вопрос вас интересует?"
+      buttons:
+        - text: "🤝 Развод"
+          value: "divorce"
+          next_step: "urgency"
+        - text: "👶 Опека и попечительство"
+          value: "custody"
+          next_step: "urgency"
+        - text: "💍 Брачный договор"
+          value: "prenup"
+          next_step: "urgency"
+        - text: "📜 Алименты"
+          value: "alimony"
+          next_step: "urgency"
+        - text: "🏠 Раздел имущества"
+          value: "property_division"
+          next_step: "urgency"
+        - text: "◀ Назад"
+          value: "back"
+          next_step: "greeting"
+    
+    - id: "urgency"
+      type: "question"
+      title: "Срочность"
+      content: "Как срочно вам нужна консультация?"
+      buttons:
+        - text: "Срочно"
+          value: "urgent"
+          next_step: "contact_collection"
+        - text: "В течение недели"
+          value: "week"
+          next_step: "contact_collection"
+        - text: "Неспешно"
+          value: "not_urgent"
+          next_step: "contact_collection"
+        - text: "◀ Назад"
+          value: "back"
+          next_step: "problem_type"
+    
+    - id: "contact_collection"
+      type: "contact"
+      title: "Контактные данные"
+      content: |
+        📝 Укажите контактные данные:
+        <b>Имя Фамилия, телефон, email</b>
+      fields:
+        - name: "full_name"
+          type: "text"
+          required: true
+        - name: "phone"
+          type: "phone"
+          required: true
+        - name: "email"
+          type: "email"
+          required: false
+      next_step: "confirmation"
+    
+    - id: "confirmation"
+      type: "summary"
+      title: "Подтверждение"
+      content: |
+        ✅ Заявка принята! Стоимость консультации: 5 000 ₽
+        Менеджер свяжется для подтверждения записи.
+      next_step: "completed"
+    
+    - id: "completed"
+      type: "end"
+      title: "Завершено"
+      content: |
+        Спасибо! Ваша заявка зарегистрирована.
+        /start — Начать заново
+      final_step: true

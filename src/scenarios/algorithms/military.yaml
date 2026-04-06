@@ -1,0 +1,31 @@
+algorithm:
+  name: "Военный юрист"
+  direction: "military"
+  version: "1.0"
+  is_paid: false
+  steps:
+    - id: "greeting"
+      type: "text"
+      content: "Здравствуйте! Консультация по военному праву."
+      next_step: "urgency"
+    - id: "urgency"
+      type: "question"
+      content: "Как срочно нужна консультация?"
+      buttons:
+        - text: "Срочно"
+          value: "urgent"
+          next_step: "contact_collection"
+        - text: "В течение недели"
+          value: "week"
+          next_step: "contact_collection"
+        - text: "Неспешно"
+          value: "not_urgent"
+          next_step: "contact_collection"
+    - id: "contact_collection"
+      type: "contact"
+      content: "Укажите контакты: Имя, телефон, email"
+      next_step: "completed"
+    - id: "completed"
+      type: "end"
+      content: "Заявка принята! Мы свяжемся с вами."
+      final_step: true
