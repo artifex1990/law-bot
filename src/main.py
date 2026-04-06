@@ -1,21 +1,22 @@
 """Точка входа приложения"""
+
 import asyncio
 import sys
 from pathlib import Path
 
-# Добавляем корень проекта в path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from loguru import logger
 from sqlalchemy.exc import SQLAlchemyError
 
-from src.config.settings import settings
 from src.config.logging_config import setup_logging
+from src.config.settings import settings
 from src.database.base import init_db
+from src.services.backup_service import BackupService
 
 
 async def run_messenger(messenger):
-    """Запуск одного мессенджера"""
+    """Запуск одного мессенджера с корректной остановкой"""
     try:
         await messenger.start()
     except Exception as e:
@@ -28,11 +29,8 @@ async def run_messenger(messenger):
 async def main():
     """Главная функция запуска"""
     setup_logging(settings.LOG_LEVEL)
-    logger.info(
-        f"Starting {settings.PROJECT_NAME} v{settings.VERSION}"
-    )
+    logger.info(f"Starting {settings.PROJECT_NAME} v{settings.VERSION}")
 
-    # Инициализация БД
     try:
         await init_db()
         logger.info("Database initialized")
@@ -40,36 +38,51 @@ async def main():
         logger.error(f"Database init failed: {e}")
         sys.exit(1)
 
-    # Собираем мессенджеры по наличию токенов
+    # Бэкапы
+    backup = BackupService()
+    await backup.start()
+
+    # Мессенджеры
     messengers = []
 
     if settings.TELEGRAM_BOT_TOKEN:
         from src.messengers.telegram import TelegramMessenger
+
         messengers.append(TelegramMessenger())
         logger.info("Telegram bot enabled")
 
     if settings.MAX_BOT_TOKEN:
         from src.messengers.max import MaxMessenger
+
         messengers.append(MaxMessenger())
         logger.info("MAX bot enabled")
 
     if not messengers:
         logger.error(
-            "No bot tokens set! "
-            "Add TELEGRAM_BOT_TOKEN or MAX_BOT_TOKEN to .env"
+            "No bot tokens configured. Set TELEGRAM_BOT_TOKEN in .env or .env.local"
         )
         sys.exit(1)
 
-    # Запуск всех мессенджеров параллельно
-    if len(messengers) == 1:
-        await run_messenger(messengers[0])
-    else:
-        tasks = [
-            asyncio.create_task(run_messenger(m))
-            for m in messengers
-        ]
-        await asyncio.gather(*tasks)
+    try:
+        if len(messengers) == 1:
+            await run_messenger(messengers[0])
+        else:
+            tasks = [asyncio.create_task(run_messenger(m)) for m in messengers]
+            done, pending = await asyncio.wait(
+                tasks,
+                return_when=asyncio.FIRST_EXCEPTION,
+            )
+            for task in pending:
+                task.cancel()
+            for task in done:
+                if task.exception():
+                    logger.error(f"Messenger crashed: {task.exception()}")
+    finally:
+        await backup.stop()
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info("Shutting down...")

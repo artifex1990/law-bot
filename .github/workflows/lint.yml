@@ -1,0 +1,35 @@
+name: Lint & Format Check
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+jobs:
+  lint:
+    name: Ruff + mypy
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff mypy sqlalchemy[mypy] types-PyYAML
+          pip install -r requirements.txt
+
+      - name: Ruff format check
+        run: ruff format --check src/
+
+      - name: Ruff lint
+        run: ruff check src/
+
+      - name: mypy type check
+        run: mypy src/ --config-file pyproject.toml

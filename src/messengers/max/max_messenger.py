@@ -1,22 +1,22 @@
 """Реализация мессенджера MAX"""
-from datetime import datetime
-from typing import Optional, List, Dict
 
+from datetime import UTC, datetime
+
+from loguru import logger
 from maxapi import Bot, Dispatcher, F
 from maxapi.types import (
-    MessageCreated,
-    MessageCallback,
     BotStarted,
+    MessageCallback,
+    MessageCreated,
 )
-from loguru import logger
 
+from src.config.settings import settings
+from src.core.conversation_manager import ConversationManager
 from src.messengers.base import (
     AbstractMessenger,
     IncomingMessage,
     OutgoingMessage,
 )
-from src.config.settings import settings
-from src.core.conversation_manager import ConversationManager
 
 
 class MaxMessenger(AbstractMessenger):
@@ -44,8 +44,8 @@ class MaxMessenger(AbstractMessenger):
                 message_id="",
                 extra_data={
                     "name": getattr(user, "username", None)
-                        or getattr(user, "name", None)
-                        or str(user.user_id),
+                    or getattr(user, "name", None)
+                    or str(user.user_id),
                 },
             )
 
@@ -65,8 +65,8 @@ class MaxMessenger(AbstractMessenger):
                 extra_data={
                     "callback_id": event.callback.callback_id,
                     "name": getattr(user, "username", None)
-                        or getattr(user, "name", None)
-                        or str(user.user_id),
+                    or getattr(user, "name", None)
+                    or str(user.user_id),
                 },
             )
 
@@ -82,8 +82,8 @@ class MaxMessenger(AbstractMessenger):
                 message_id=str(event.message.body.mid),
                 extra_data={
                     "name": getattr(sender, "username", None)
-                        or getattr(sender, "name", None)
-                        or str(sender.user_id),
+                    or getattr(sender, "name", None)
+                    or str(sender.user_id),
                 },
             )
 
@@ -94,7 +94,7 @@ class MaxMessenger(AbstractMessenger):
         content: str,
         message_type: str,
         message_id: str,
-        extra_data: Optional[Dict] = None,
+        extra_data: dict | None = None,
     ):
         """Общий обработчик событий"""
         msg = IncomingMessage(
@@ -103,14 +103,12 @@ class MaxMessenger(AbstractMessenger):
             content=content,
             message_type=message_type,
             message_id=message_id,
-            created_at=datetime.now(),
+            created_at=datetime.now(tz=UTC),
             extra_data=extra_data,
         )
         await self.conversation_manager.process_message(msg)
 
-    def build_inline_keyboard(
-        self, buttons: list
-    ) -> Optional[List[List[Dict]]]:
+    def build_inline_keyboard(self, buttons: list) -> list[list[dict]] | None:
         """Построение inline-клавиатуры для MAX.
 
         Возвращает структуру кнопок для
@@ -119,14 +117,16 @@ class MaxMessenger(AbstractMessenger):
         if not buttons:
             return None
 
-        keyboard: List[List[Dict]] = []
-        row: List[Dict] = []
+        keyboard: list[list[dict]] = []
+        row: list[dict] = []
         for btn in buttons:
-            row.append({
-                "type": "callback",
-                "text": btn.get("text", "")[:64],
-                "payload": btn.get("value", "")[:255],
-            })
+            row.append(
+                {
+                    "type": "callback",
+                    "text": btn.get("text", "")[:64],
+                    "payload": btn.get("value", "")[:255],
+                }
+            )
             if len(row) >= 2:
                 keyboard.append(row)
                 row = []
@@ -139,28 +139,35 @@ class MaxMessenger(AbstractMessenger):
         """Запуск бота"""
         logger.info("Starting MAX bot...")
         me = await self.bot.get_me()
-        bot_name = getattr(me, "username", None) or getattr(me, "name", None) or str(me.user_id)
+        bot_name = (
+            getattr(me, "username", None)
+            or getattr(me, "name", None)
+            or str(me.user_id)
+        )
         logger.info(f"MAX bot started: {bot_name}")
         await self.dp.start_polling(self.bot)
 
     async def stop(self):
         """Остановка бота"""
         logger.info("Stopping MAX bot...")
+        if hasattr(self.bot, "session") and self.bot.session:
+            await self.bot.session.close()
 
-    async def send_message(
-        self, message: OutgoingMessage
-    ) -> bool:
+    async def send_message(self, message: OutgoingMessage) -> bool:
         """Отправка сообщения"""
         try:
             attachments = None
             keyboard = message.reply_markup
             if keyboard:
-                attachments = [{
-                    "type": "inline_keyboard",
-                    "payload": {"buttons": keyboard},
-                }]
+                attachments = [
+                    {
+                        "type": "inline_keyboard",
+                        "payload": {"buttons": keyboard},
+                    }
+                ]
 
             from maxapi.types import ParseMode
+
             fmt = None
             if message.parse_mode:
                 mode = message.parse_mode.lower()
@@ -184,6 +191,7 @@ class MaxMessenger(AbstractMessenger):
         """Индикатор печати"""
         try:
             from maxapi.types import SenderAction
+
             await self.bot.send_action(
                 chat_id=int(chat_id),
                 action=SenderAction.TYPING_ON,
@@ -191,8 +199,6 @@ class MaxMessenger(AbstractMessenger):
         except Exception as e:
             logger.debug(f"MAX typing error: {e}")
 
-    async def handle_incoming_message(
-        self, message: IncomingMessage
-    ):
+    async def handle_incoming_message(self, message: IncomingMessage):
         """Обработка входящего (для совместимости)"""
         await self.conversation_manager.process_message(message)

@@ -1,6 +1,8 @@
 """Настройка логирования"""
+
 import sys
 from pathlib import Path
+
 from loguru import logger
 
 from src.config.settings import settings
@@ -9,7 +11,7 @@ from src.config.settings import settings
 def setup_logging(level: str = "INFO") -> None:
     """Настройка логирования с loguru"""
     logger.remove()
-    
+
     # Консольный вывод
     logger.add(
         sys.stderr,
@@ -17,11 +19,11 @@ def setup_logging(level: str = "INFO") -> None:
         level=level,
         colorize=True,
     )
-    
+
     # Файловый вывод
     log_dir = Path(settings.LOG_FILE).parent
     log_dir.mkdir(parents=True, exist_ok=True)
-    
+
     logger.add(
         settings.LOG_FILE,
         format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function} - {message}",

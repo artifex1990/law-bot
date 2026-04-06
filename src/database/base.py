@@ -1,19 +1,20 @@
 """Базовая конфигурация БД с async SQLAlchemy"""
-from typing import AsyncIterator
+
+from collections.abc import AsyncIterator
+
+from loguru import logger
 from sqlalchemy.ext.asyncio import (
-    create_async_engine,
     AsyncSession,
     async_sessionmaker,
+    create_async_engine,
 )
 from sqlalchemy.orm import DeclarativeBase
-from loguru import logger
 
 from src.config.settings import settings
 
 
 class Base(DeclarativeBase):
     """Базовый класс для моделей"""
-    pass
 
 
 # Синхронный URL для SQLite - aiosqlite требует sqlite+aiosqlite
@@ -33,7 +34,7 @@ async_session_factory = async_sessionmaker(
 
 
 async def get_async_session() -> AsyncIterator[AsyncSession]:
-    """Получить сессию БД"""
+    """Получить сессию БД (для dependency injection)"""
     async with async_session_factory() as session:
         try:
             yield session
@@ -41,8 +42,6 @@ async def get_async_session() -> AsyncIterator[AsyncSession]:
         except Exception:
             await session.rollback()
             raise
-        finally:
-            await session.close()
 
 
 async def init_db() -> None:
@@ -50,16 +49,17 @@ async def init_db() -> None:
     Импорт моделей здесь, чтобы избежать циклического импорта (модели импортируют Base).
     """
     from src.database.models import (  # noqa: F401
-        User,
         Chat,
-        Message,
-        ConversationStep,
         Consultation,
+        ConversationStep,
+        Message,
+        User,
     )
     from src.database.models.telegram_models import (  # noqa: F401
-        TelegramUser,
         TelegramChat,
+        TelegramUser,
     )
+
     try:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)

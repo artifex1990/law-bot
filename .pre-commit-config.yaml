@@ -1,0 +1,52 @@
+# Pre-commit hooks — автопроверка при каждом git commit
+# Установка: pre-commit install
+# Ручной запуск: pre-commit run --all-files
+
+default_language_version:
+  python: python3.11
+
+repos:
+  # ---- Ruff: линтинг + автоформатирование ----
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.6
+    hooks:
+      # Форматирование (аналог black + isort)
+      - id: ruff-format
+
+      # Линтинг с автофиксом (аналог flake8 + pylint)
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+
+  # ---- mypy: проверка типов ----
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.13.0
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - sqlalchemy[mypy]
+          - types-PyYAML
+        args: [--config-file=pyproject.toml]
+        pass_filenames: false
+
+  # ---- Стандартные хуки ----
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      # Trailing whitespace
+      - id: trailing-whitespace
+      # Пустая строка в конце файла
+      - id: end-of-file-fixer
+      # Проверка YAML синтаксиса
+      - id: check-yaml
+      # Проверка TOML синтаксиса
+      - id: check-toml
+      # Нет больших файлов
+      - id: check-added-large-files
+        args: [--maxkb=500]
+      # Нет конфликтных маркеров git
+      - id: check-merge-conflict
+      # Проверка JSON
+      - id: check-json
+        exclude: \.vscode/
+      # Нет секретов в коде
+      - id: detect-private-key
