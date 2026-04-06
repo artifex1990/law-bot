@@ -1,19 +1,32 @@
 """Модель шага диалога"""
-from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, JSON
-from sqlalchemy.orm import relationship
+
+from datetime import UTC, datetime
+from typing import Any
+
+from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database.base import Base
 
 
+def _utcnow() -> datetime:
+    return datetime.now(UTC)
+
+
 class ConversationStep(Base):
     """Пройденный шаг диалога"""
+
     __tablename__ = "conversation_steps"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    chat_id = Column(Integer, ForeignKey("chats.id"), nullable=False, index=True)
-    step_name = Column(String(100), nullable=False)
-    step_data = Column(JSON, nullable=True)
-    completed_at = Column(DateTime, default=datetime.utcnow)
-    
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    chat_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("chats.id"),
+        nullable=False,
+        index=True,
+    )
+    step_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    step_data: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    completed_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+
     chat = relationship("Chat", back_populates="conversation_steps")

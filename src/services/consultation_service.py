@@ -1,13 +1,12 @@
 """Сервис консультаций - работа с БД через ORM"""
-from datetime import datetime
-from typing import Optional
 
+from datetime import UTC, datetime
+
+from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from loguru import logger
-
-from src.database.models import User, Chat, Consultation, ConversationStep
+from src.database.models import Chat, Consultation, ConversationStep, User
 
 
 class ConsultationService:
@@ -23,7 +22,7 @@ class ConsultationService:
         result = await self.session.execute(
             select(User).where(
                 User.messenger_user_id == messenger_user_id,
-                User.messenger_type == messenger_type
+                User.messenger_type == messenger_type,
             )
         )
         user = result.scalar_one_or_none()
@@ -31,7 +30,7 @@ class ConsultationService:
         if not user:
             user = User(
                 messenger_type=messenger_type,
-                messenger_user_id=messenger_user_id
+                messenger_user_id=messenger_user_id,
             )
             self.session.add(user)
             await self.session.flush()
@@ -51,34 +50,28 @@ class ConsultationService:
 
     async def update_chat_direction(self, chat_id: int, direction: str):
         """Обновить направление чата"""
-        result = await self.session.execute(
-            select(Chat).where(Chat.id == chat_id)
-        )
+        result = await self.session.execute(select(Chat).where(Chat.id == chat_id))
         chat = result.scalar_one_or_none()
         if chat:
-            setattr(chat, "direction", direction)
+            chat.direction = direction
             await self.session.flush()
 
     async def mark_chat_completed(self, chat_id: int):
         """Отметить чат как завершённый"""
-        result = await self.session.execute(
-            select(Chat).where(Chat.id == chat_id)
-        )
+        result = await self.session.execute(select(Chat).where(Chat.id == chat_id))
         chat = result.scalar_one_or_none()
         if chat:
-            setattr(chat, "status", "completed")
-            setattr(chat, "completed_at", datetime.now(datetime.timezone.utc))
+            chat.status = "completed"
+            chat.completed_at = datetime.now(UTC)
             await self.session.flush()
 
     async def mark_chat_abandoned(self, chat_id: int):
         """Отметить чат как заброшенный"""
-        result = await self.session.execute(
-            select(Chat).where(Chat.id == chat_id)
-        )
+        result = await self.session.execute(select(Chat).where(Chat.id == chat_id))
         chat = result.scalar_one_or_none()
         if chat:
-            setattr(chat, "status", "abandoned")
-            setattr(chat, "completed_at", datetime.now(datetime.timezone.utc))
+            chat.status = "abandoned"
+            chat.completed_at = datetime.now(UTC)
             await self.session.flush()
 
     async def save_conversation_step(
@@ -88,7 +81,7 @@ class ConsultationService:
         step = ConversationStep(
             chat_id=chat_id,
             step_name=step_name,
-            step_data=step_data
+            step_data=step_data,
         )
         self.session.add(step)
         await self.session.flush()
@@ -99,7 +92,7 @@ class ConsultationService:
         user_id: int,
         direction: str,
         status: str = "pending",
-        **kwargs
+        **kwargs,
     ) -> Consultation:
         """Создать заявку на консультацию"""
         consultation = Consultation(
@@ -107,9 +100,9 @@ class ConsultationService:
             user_id=user_id,
             direction=direction,
             status=status,
-            is_paid=kwargs.get('is_paid', False),
-            payment_amount=kwargs.get('payment_amount'),
-            notes=kwargs.get('notes')
+            is_paid=kwargs.get("is_paid", False),
+            payment_amount=kwargs.get("payment_amount"),
+            notes=kwargs.get("notes"),
         )
         self.session.add(consultation)
         await self.session.flush()
@@ -120,20 +113,18 @@ class ConsultationService:
     async def update_user_contacts(
         self,
         user_id: int,
-        full_name: Optional[str] = None,
-        phone: Optional[str] = None,
-        email: Optional[str] = None
+        full_name: str | None = None,
+        phone: str | None = None,
+        email: str | None = None,
     ):
         """Обновить контакты пользователя"""
-        result = await self.session.execute(
-            select(User).where(User.id == user_id)
-        )
+        result = await self.session.execute(select(User).where(User.id == user_id))
         user = result.scalar_one_or_none()
         if user:
             if full_name:
-                setattr(user, "full_name", full_name)
+                user.full_name = full_name
             if phone:
-                setattr(user, "phone", phone)
+                user.phone = phone
             if email:
-                setattr(user, "email", email)
+                user.email = email
             await self.session.flush()

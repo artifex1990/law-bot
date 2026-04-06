@@ -18,19 +18,20 @@ services:
     networks:
       - bot_network
 
-  telegram_bot:
+  bot:
     build: .
-    container_name: legal_telegram_bot
+    container_name: legal_bot
     depends_on:
       postgres:
         condition: service_healthy
+    env_file:
+      - .env
+      - .env.local
     environment:
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-      MAX_BOT_TOKEN: ${MAX_BOT_TOKEN}
       DATABASE_URL: postgresql+asyncpg://${DB_USER:-legal_bot}:${DB_PASSWORD:-legal_bot_pass}@postgres:5432/${DB_NAME:-legal_bot}
-      LOG_LEVEL: ${LOG_LEVEL:-INFO}
     volumes:
       - ./logs:/app/logs
+      - ./backups:/app/backups
       - ./src/scenarios:/app/src/scenarios
     restart: unless-stopped
     networks:
