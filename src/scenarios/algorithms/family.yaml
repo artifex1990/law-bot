@@ -1,93 +1,117 @@
-# Алгоритм: Семейное право
 algorithm:
-  name: "Консультация по семейному праву"
+  name: "Семейный юрист — платная консультация"
   direction: "family"
-  version: "1.0"
+  version: "2.0"
   is_paid: true
   price: 5000
-  
+
   steps:
     - id: "greeting"
       type: "text"
-      title: "Приветствие"
       content: |
-        👋 Добро пожаловать на консультацию по семейному праву!
-        
-        Стоимость консультации: 5 000 ₽
-      next_step: "problem_type"
-    
-    - id: "problem_type"
+        Здравствуйте! Я <b>Алексей</b>, ваш личный помощник по семейным юридическим вопросам.
+
+        Понимание, что вы оказались в непростой ситуации, — первый шаг к её решению. Наша задача — помочь вам пройти через это спокойно и с наименьшими потерями.
+      next_step: "problem_quiz"
+
+    - id: "problem_quiz"
       type: "question"
-      title: "Вид проблемы"
-      content: "Какой вопрос вас интересует?"
+      content: "Ваша ситуация связана с семьёй?"
       buttons:
-        - text: "🤝 Развод"
+        - text: "💔 Развод и раздел имущества"
           value: "divorce"
-          next_step: "urgency"
-        - text: "👶 Опека и попечительство"
-          value: "custody"
-          next_step: "urgency"
-        - text: "💍 Брачный договор"
-          value: "prenup"
-          next_step: "urgency"
-        - text: "📜 Алименты"
+          next_step: "readiness_quiz"
+        - text: "👶 Алименты и содержание ребёнка"
           value: "alimony"
-          next_step: "urgency"
-        - text: "🏠 Раздел имущества"
-          value: "property_division"
-          next_step: "urgency"
-        - text: "◀ Назад"
-          value: "back"
-          next_step: "greeting"
-    
-    - id: "urgency"
+          next_step: "readiness_quiz"
+        - text: "📝 Усыновление / смена фамилии"
+          value: "adoption"
+          next_step: "readiness_quiz"
+        - text: "⚡ Споры о воспитании детей"
+          value: "custody"
+          next_step: "readiness_quiz"
+
+    - id: "readiness_quiz"
       type: "question"
-      title: "Срочность"
-      content: "Как срочно вам нужна консультация?"
+      content: "Оцените вашу готовность к действиям:"
       buttons:
-        - text: "Срочно"
-          value: "urgent"
+        - text: "🔥 Готов(а) встретиться с юристом"
+          value: "ready_now"
+          next_step: "significance_quiz"
+        - text: "🤔 Хочу взвесить все за и против"
+          value: "thinking"
+          next_step: "significance_quiz"
+        - text: "📋 Пока откладываю вопрос"
+          value: "just_info"
+          next_step: "significance_quiz"
+
+    - id: "significance_quiz"
+      type: "question"
+      content: "Насколько важна для вас эта проблема?"
+      buttons:
+        - text: "⚡ Крайне важно решить быстрее"
+          value: "critical"
+          next_step: "paid_value"
+        - text: "⏳ Средний вес, есть время"
+          value: "important"
+          next_step: "paid_value"
+        - text: "📌 Не самый актуальный вопрос"
+          value: "normal"
+          next_step: "paid_value"
+
+    - id: "paid_value"
+      type: "text"
+      content: |
+        Мы используем <b>уникальные методики</b>, позволяющие глубоко исследовать каждую деталь вашего дела. Эксперты с многолетней практикой лично консультируют вас.
+
+        💡 Если после консультации вы закажете услугу — консультация бесплатна. Оплачиваете только работу по договору.
+      next_step: "success_cases"
+
+    - id: "success_cases"
+      type: "question"
+      content: "Наши юристы выиграли тысячи семейных дел. Хотите увидеть пример?"
+      buttons:
+        - text: "✅ Да, покажите"
+          value: "show_case"
+          next_step: "case_display"
+        - text: "➡ Перейти к записи"
+          value: "skip_case"
           next_step: "contact_collection"
-        - text: "В течение недели"
-          value: "week"
-          next_step: "contact_collection"
-        - text: "Неспешно"
-          value: "not_urgent"
-          next_step: "contact_collection"
-        - text: "◀ Назад"
-          value: "back"
-          next_step: "problem_type"
-    
+
+    - id: "case_display"
+      type: "text"
+      content: |
+        📌 <b>Кейс: Раздел имущества при разводе</b>
+
+        Клиентка обратилась по разделу совместного имущества стоимостью 12 млн руб. Супруг скрывал активы.
+
+        ✅ Обнаружены скрытые активы на 4 млн руб.
+        ✅ Справедливый раздел в пользу клиентки
+        ✅ Определён порядок общения с ребёнком
+        ✅ Срок: 5 месяцев
+
+        Мы готовы помочь и вам! 💪
+      next_step: "contact_collection"
+
     - id: "contact_collection"
       type: "contact"
-      title: "Контактные данные"
       content: |
-        📝 Укажите контактные данные:
-        <b>Имя Фамилия, телефон, email</b>
-      fields:
-        - name: "full_name"
-          type: "text"
-          required: true
-        - name: "phone"
-          type: "phone"
-          required: true
-        - name: "email"
-          type: "email"
-          required: false
+        📝 Для записи на консультацию оставьте контактные данные.
+
+        Нажмите «📱 Поделиться контактом» или отправьте:
+        <b>Имя Фамилия, +7XXXXXXXXXX</b>
       next_step: "confirmation"
-    
+
     - id: "confirmation"
-      type: "summary"
-      title: "Подтверждение"
-      content: |
-        ✅ Заявка принята! Стоимость консультации: 5 000 ₽
-        Менеджер свяжется для подтверждения записи.
-      next_step: "completed"
-    
-    - id: "completed"
       type: "end"
-      title: "Завершено"
       content: |
-        Спасибо! Ваша заявка зарегистрирована.
-        /start — Начать заново
+        ✅ <b>Заявка принята!</b>
+
+        📋 Направление: Семейное право
+        💰 Стоимость консультации: 5 000 ₽
+        👤 Контакты сохранены
+
+        Менеджер свяжется с вами в ближайшее время.
+
+        /start — Новая консультация
       final_step: true

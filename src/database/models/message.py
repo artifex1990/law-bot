@@ -1,6 +1,6 @@
 """Модель сообщения"""
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -9,7 +9,7 @@ from src.database.base import Base
 
 
 def _utcnow() -> datetime:
-    return datetime.now(UTC)
+    return datetime.now(timezone.utc)
 
 
 class Message(Base):

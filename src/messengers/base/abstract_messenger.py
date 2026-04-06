@@ -1,9 +1,18 @@
 """Абстрактный класс мессенджера"""
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
+
+
+@dataclass
+class MediaItem:
+    """Медиа-элемент для отправки (фото, кружочек, видео, GIF)."""
+
+    type: str  # photo | video_note | video | animation | sticker
+    file: str  # путь к файлу относительно BASE_DIR (src/scenarios/media/...)
+    caption: str | None = None
 
 
 @dataclass
@@ -28,6 +37,10 @@ class OutgoingMessage:
     buttons: list[dict[str, str]] | None = None
     reply_markup: Any | None = None
     parse_mode: str | None = "HTML"
+    photo: str | None = None
+    contact_request: bool = False
+    remove_keyboard: bool = False
+    media: list[MediaItem] = field(default_factory=list)
 
 
 class AbstractMessenger(ABC):

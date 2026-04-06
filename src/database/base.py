@@ -17,7 +17,6 @@ class Base(DeclarativeBase):
     """Базовый класс для моделей"""
 
 
-# Синхронный URL для SQLite - aiosqlite требует sqlite+aiosqlite
 engine = create_async_engine(
     settings.DATABASE_URL,
     echo=settings.DEBUG,
@@ -34,7 +33,7 @@ async_session_factory = async_sessionmaker(
 
 
 async def get_async_session() -> AsyncIterator[AsyncSession]:
-    """Получить сессию БД (для dependency injection)"""
+    """Получить сессию БД"""
     async with async_session_factory() as session:
         try:
             yield session
@@ -45,9 +44,7 @@ async def get_async_session() -> AsyncIterator[AsyncSession]:
 
 
 async def init_db() -> None:
-    """Инициализация БД - создание таблиц.
-    Импорт моделей здесь, чтобы избежать циклического импорта (модели импортируют Base).
-    """
+    """Инициализация БД - создание таблиц."""
     from src.database.models import (  # noqa: F401
         Chat,
         Consultation,
@@ -64,5 +61,5 @@ async def init_db() -> None:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
     except Exception as e:
-        logger.error(f"Failed to create database tables: {e}")
+        logger.error(f"Failed to create tables: {e}")
         raise

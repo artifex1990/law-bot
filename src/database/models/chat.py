@@ -1,6 +1,6 @@
 """Модель чата"""
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -9,7 +9,7 @@ from src.database.base import Base
 
 
 def _utcnow() -> datetime:
-    return datetime.now(UTC)
+    return datetime.now(timezone.utc)
 
 
 class Chat(Base):
@@ -26,8 +26,19 @@ class Chat(Base):
     )
     direction: Mapped[str | None] = mapped_column(String(100), nullable=True)
     started_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
-    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(
+        DateTime, nullable=True
+    )
     status: Mapped[str] = mapped_column(String(50), default="active")
+
+    last_activity_at: Mapped[datetime] = mapped_column(
+        DateTime, default=_utcnow
+    )
+    reminder_count: Mapped[int] = mapped_column(Integer, default=0)
+    last_reminder_at: Mapped[datetime | None] = mapped_column(
+        DateTime, nullable=True
+    )
+    current_step: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     user = relationship("User", back_populates="chats")
     messages = relationship("Message", back_populates="chat")

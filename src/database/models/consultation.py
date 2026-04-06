@@ -1,15 +1,23 @@
 """Модель консультации"""
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database.base import Base
 
 
 def _utcnow() -> datetime:
-    return datetime.now(UTC)
+    return datetime.now(timezone.utc)
 
 
 class Consultation(Base):
@@ -32,14 +40,19 @@ class Consultation(Base):
     )
     direction: Mapped[str] = mapped_column(String(100), nullable=False)
     status: Mapped[str] = mapped_column(String(50), default="pending")
-    scheduled_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    scheduled_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True,
+    )
     lawyer_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     is_paid: Mapped[bool] = mapped_column(Boolean, default=False)
     payment_amount: Mapped[float | None] = mapped_column(Float, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=_utcnow, onupdate=_utcnow
+        DateTime,
+        default=_utcnow,
+        onupdate=_utcnow,
     )
 
     chat = relationship("Chat", back_populates="consultations")

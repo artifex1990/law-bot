@@ -1,0 +1,115 @@
+algorithm:
+  name: "Пенсионный юрист — платная консультация"
+  direction: "pension"
+  version: "2.0"
+  is_paid: true
+  price: 5000
+
+  steps:
+    - id: "greeting"
+      type: "text"
+      content: |
+        Здравствуйте! Я <b>Алексей</b>, ваш помощник по пенсионным вопросам.
+
+        Пенсионное законодательство сложное, но мы поможем вам разобраться и защитить ваши права.
+      next_step: "problem_quiz"
+
+    - id: "problem_quiz"
+      type: "question"
+      content: "Вас интересует пенсионное законодательство?"
+      buttons:
+        - text: "📋 Досрочный выход на пенсию"
+          value: "early_retirement"
+          next_step: "readiness_quiz"
+        - text: "💰 Увеличение пенсии / соцвыплат"
+          value: "increase_pension"
+          next_step: "readiness_quiz"
+        - text: "🏠 Переоформление пенсии при переезде"
+          value: "transfer_pension"
+          next_step: "readiness_quiz"
+        - text: "♿ Назначение инвалидности"
+          value: "disability"
+          next_step: "readiness_quiz"
+
+    - id: "readiness_quiz"
+      type: "question"
+      content: "Оцените вашу готовность к действиям:"
+      buttons:
+        - text: "🔥 Готов(а) получить консультацию на неделе"
+          value: "ready_now"
+          next_step: "significance_quiz"
+        - text: "🤔 Подумаю и приму решение позднее"
+          value: "thinking"
+          next_step: "significance_quiz"
+        - text: "📋 Буду наблюдать пассивно"
+          value: "just_info"
+          next_step: "significance_quiz"
+
+    - id: "significance_quiz"
+      type: "question"
+      content: "Насколько важна для вас эта проблема?"
+      buttons:
+        - text: "⚡ Высокая — определяет размер пенсии"
+          value: "critical"
+          next_step: "paid_value"
+        - text: "⏳ Умеренная — мелкие изменения"
+          value: "important"
+          next_step: "paid_value"
+        - text: "📌 Незначительная роль"
+          value: "normal"
+          next_step: "paid_value"
+
+    - id: "paid_value"
+      type: "text"
+      content: |
+        Наши пенсионные юристы имеют <b>многолетний опыт</b> работы с ПФР и судебными органами. Индивидуальный подход к каждому делу.
+
+        💡 Если после консультации вы закажете услугу — консультация бесплатна.
+      next_step: "success_cases"
+
+    - id: "success_cases"
+      type: "question"
+      content: "Хотите увидеть пример успешного дела?"
+      buttons:
+        - text: "✅ Да, покажите"
+          value: "show_case"
+          next_step: "case_display"
+        - text: "➡ Перейти к записи"
+          value: "skip_case"
+          next_step: "contact_collection"
+
+    - id: "case_display"
+      type: "text"
+      content: |
+        📌 <b>Кейс: Перерасчёт пенсии с доплатой 340 000 ₽</b>
+
+        Клиенту неверно рассчитали стаж, что привело к заниженной пенсии на протяжении 5 лет.
+
+        ✅ Собраны подтверждающие документы
+        ✅ Подана жалоба в ПФР и суд
+        ✅ Перерасчёт и доплата за 5 лет
+
+        Мы готовы помочь и вам! 💪
+      next_step: "contact_collection"
+
+    - id: "contact_collection"
+      type: "contact"
+      content: |
+        📝 Для записи на консультацию оставьте контактные данные.
+
+        Нажмите «📱 Поделиться контактом» или отправьте:
+        <b>Имя Фамилия, +7XXXXXXXXXX</b>
+      next_step: "confirmation"
+
+    - id: "confirmation"
+      type: "end"
+      content: |
+        ✅ <b>Заявка принята!</b>
+
+        📋 Направление: Пенсионный юрист
+        💰 Стоимость консультации: 5 000 ₽
+
+        Менеджер свяжется с вами в ближайшее время.
+
+        /start — Новая консультация
+      final_step: true
