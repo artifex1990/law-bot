@@ -178,7 +178,7 @@ async def test_process_message_help(mock_messenger):
 
 @pytest.mark.asyncio
 async def test_process_message_cancel(mock_messenger):
-    """/cancel без истории шагов — подсказка, без сброса диалога."""
+    """/cancel без истории шагов - подсказка, без сброса диалога."""
     mgr = ConversationManager(mock_messenger)
     msg = _make_message("/cancel")
     await mgr.process_message(msg)
@@ -390,6 +390,52 @@ async def test_deletedata_confirm_no(mock_messenger):
 
     last = mock_messenger.send_message.call_args_list[-1][0][0]
     assert last.content == MSG_DELETE_CANCEL
+
+
+@pytest.mark.asyncio
+async def test_deletedata_confirm_yes_without_context_user_id(
+    mock_messenger,
+):
+    """Удаление работает даже если user_db_id не был заполнен в контексте."""
+    mgr = ConversationManager(mock_messenger)
+    msg1 = _make_message("/deletedata")
+    await mgr.process_message(msg1)
+
+    ctx = mgr.active_conversations["1_1"]
+    assert ctx.user_db_id is None
+
+    mock_session = AsyncMock()
+    mock_session.__aenter__ = AsyncMock(return_value=mock_session)
+    mock_session.__aexit__ = AsyncMock(return_value=False)
+
+    mock_user = AsyncMock()
+    mock_user.id = 77
+
+    mock_svc = AsyncMock()
+    mock_svc.get_user_by_messenger.return_value = mock_user
+    mock_svc.delete_user_data.return_value = True
+
+    with (
+        patch(
+            "src.core.conversation_manager.async_session_factory",
+            return_value=mock_session,
+        ),
+        patch(
+            "src.core.conversation_manager.ConsultationService",
+            return_value=mock_svc,
+        ),
+    ):
+        msg2 = _make_message("Да, удалить")
+        await mgr.process_message(msg2)
+
+    mock_svc.get_user_by_messenger.assert_awaited_once_with(
+        messenger_user_id="1",
+        messenger_type="telegram",
+    )
+    mock_svc.delete_user_data.assert_awaited_once_with(77)
+    assert "1_1" not in mgr.active_conversations
+    last = mock_messenger.send_message.call_args_list[-1][0][0]
+    assert last.content == MSG_DELETE_DONE
 
 
 # ---- _find_next_step ----

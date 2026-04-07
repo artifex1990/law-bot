@@ -1,4 +1,4 @@
-# Pre-commit hooks — автопроверка при каждом git commit
+# Pre-commit hooks - автопроверка при каждом git commit
 # Установка: pre-commit install
 # Ручной запуск: pre-commit run --all-files
 

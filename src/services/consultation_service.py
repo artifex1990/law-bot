@@ -47,6 +47,19 @@ class ConsultationService:
 
         return user
 
+    async def get_user_by_messenger(
+        self,
+        messenger_user_id: str,
+        messenger_type: str,
+    ) -> User | None:
+        """Найти пользователя по идентификатору в мессенджере."""
+        query = select(User).where(
+            User.messenger_user_id == messenger_user_id,
+            User.messenger_type == messenger_type,
+        )
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none()
+
     async def close_active_chats(self, user_id: int) -> None:
         """Закрыть все активные чаты пользователя."""
         now = datetime.now(timezone.utc)
@@ -72,7 +85,7 @@ class ConsultationService:
         chat_id: int,
         direction: str | None,
     ):
-        """Обновить направление чата (None — главное меню до выбора темы)."""
+        """Обновить направление чата (None - главное меню до выбора темы)."""
         query = select(Chat).where(Chat.id == chat_id)
         result = await self.session.execute(query)
         chat = result.scalar_one_or_none()

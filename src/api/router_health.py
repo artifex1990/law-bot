@@ -15,7 +15,7 @@ router = APIRouter(prefix="/v1", tags=["Служебное"])
     response_model=HealthLiveResponse,
     summary="Liveness (совместимость)",
     description=(
-        "Процесс отвечает. Не проверяет БД — для Kubernetes livenessProbe."
+        "Процесс отвечает. Не проверяет БД - для Kubernetes livenessProbe."
     ),
 )
 async def health_legacy():

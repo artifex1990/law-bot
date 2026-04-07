@@ -17,11 +17,11 @@ class MediaAttachment:
     """Медиа-вложение для шага алгоритма.
 
     Поддерживаемые типы:
-      - photo       — обычная фотография
-      - video_note  — кружочек (круглое видео)
-      - video       — обычное видео
-      - animation   — GIF-анимация
-      - sticker     — стикер
+      - photo       - обычная фотография
+      - video_note  - кружочек (круглое видео)
+      - video       - обычное видео
+      - animation   - GIF-анимация
+      - sticker     - стикер
     """
 
     def __init__(self, media_dict: dict):

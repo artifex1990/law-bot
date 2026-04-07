@@ -33,7 +33,7 @@ class Settings:
     TELEGRAM_USE_WEBHOOK = _flag("TELEGRAM_USE_WEBHOOK")
     # Публичный HTTPS URL для Telegram setWebhook (см. build_telegram_webhook_url)
     WEBHOOK_URL: str = os.getenv("WEBHOOK_URL", "")
-    # Локальная привязка HTTP-сервера под updates (443, 80, 88, 8443 — см. Telegram)
+    # Локальная привязка HTTP-сервера под updates (443, 80, 88, 8443 - см. Telegram)
     WEBHOOK_PORT: int = int(os.getenv("WEBHOOK_PORT", "8443"))
     WEBHOOK_LISTEN_HOST: str = os.getenv("WEBHOOK_LISTEN_HOST", "0.0.0.0")
     # Путь на вашем сервере (дописывается к WEBHOOK_URL, если в URL нет пути)
@@ -93,7 +93,7 @@ class Settings:
         [
             (
                 "Здравствуйте! Вы начали консультацию, "
-                "но не завершили. Мы готовы помочь — "
+                "но не завершили. Мы готовы помочь - "
                 "продолжим?\n\n"
                 "Нажмите /start чтобы продолжить."
             ),
@@ -105,7 +105,7 @@ class Settings:
             (
                 "Мы заметили, что вы давно не "
                 "возвращались. Если у вас остались "
-                "вопросы — мы на связи. /start"
+                "вопросы - мы на связи. /start"
             ),
             (
                 "Последнее напоминание: если вам всё "

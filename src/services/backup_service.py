@@ -1,13 +1,13 @@
 """Сервис резервного копирования БД.
 
 Поддерживаемые хранилища (BACKUP_STORAGE_TYPE):
-  local — локальная папка (BACKUP_LOCAL_PATH)
-  ftp   — FTP / FTPS сервер
-  s3    — S3-совместимое облако
+  local - локальная папка (BACKUP_LOCAL_PATH)
+  ftp   - FTP / FTPS сервер
+  s3    - S3-совместимое облако
 
 Расписание и ретеншн настраиваются через .env:
-  BACKUP_INTERVAL_HOURS  — интервал (по умолчанию 1 ч)
-  BACKUP_RETENTION_DAYS  — срок хранения (30 дней)
+  BACKUP_INTERVAL_HOURS  - интервал (по умолчанию 1 ч)
+  BACKUP_RETENTION_DAYS  - срок хранения (30 дней)
 """
 
 import asyncio
@@ -156,7 +156,7 @@ class BackupService:
         await loop.run_in_executor(None, self._write_gz, gz_path, stdout)
 
     # -------------------------------------------------------
-    # Хранилище — роутинг
+    # Хранилище - роутинг
     # -------------------------------------------------------
 
     async def _store(self, local_file: Path):

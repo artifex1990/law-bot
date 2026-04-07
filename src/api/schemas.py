@@ -62,7 +62,7 @@ class HealthReadyResponse(BaseModel):
     status: str = Field(description="ready | unready")
     ready: bool
     checks: dict[str, str] = Field(
-        description="Ключ — имя проверки, значение — ok или fail: …",
+        description="Ключ - имя проверки, значение - ok или fail: …",
     )
     version: str = Field(description="Версия приложения")
 

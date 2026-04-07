@@ -1,4 +1,4 @@
-"""Сервис администрирования — статистика и доступ к данным."""
+"""Сервис администрирования - статистика и доступ к данным."""
 
 # pylint: disable=not-callable
 
@@ -73,9 +73,9 @@ class AdminService:
         return [
             {
                 "id": u.id,
-                "name": u.full_name or "—",
-                "phone": u.phone or "—",
-                "email": u.email or "—",
+                "name": u.full_name or "-",
+                "phone": u.phone or "-",
+                "email": u.email or "-",
                 "messenger": u.messenger_type,
                 "created": u.created_at.strftime("%d.%m.%Y %H:%M"),
             }
@@ -99,8 +99,8 @@ class AdminService:
                 "direction": c.direction,
                 "status": c.status,
                 "is_paid": c.is_paid,
-                "name": u.full_name or "—",
-                "phone": u.phone or "—",
+                "name": u.full_name or "-",
+                "phone": u.phone or "-",
                 "created": c.created_at.strftime("%d.%m.%Y %H:%M"),
             }
             for c, u in rows

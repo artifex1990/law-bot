@@ -27,7 +27,7 @@ from src.services.consultation_service import (
 from src.services.outbound_sync import schedule_push_consultation
 
 MSG_CANCEL_EMPTY = (
-    "Сейчас нечего отменить — вы ещё не выбирали шаг в этом диалоге.\n\n"
+    "Сейчас нечего отменить - вы ещё не выбирали шаг в этом диалоге.\n\n"
     "Продолжайте ответ или нажмите <b>/restart</b>, чтобы начать сначала."
 )
 MSG_ERROR = "Произошла ошибка. Напишите /start чтобы начать заново."
@@ -62,20 +62,20 @@ MSG_DELETE_CANCEL = "Удаление отменено. Ваши данные с
 MSG_UNKNOWN_CMD = (
     "Команда не найдена.\n\n"
     "<b>Доступные команды:</b>\n"
-    "/start — Начать консультацию\n"
-    "/restart — Начать заново\n"
-    "/help — Показать справку\n"
-    "/cancel — Отменить последний ответ (шаг назад)\n"
-    "/deletedata — Удалить мои данные"
+    "/start - Начать консультацию\n"
+    "/restart - Начать заново\n"
+    "/help - Показать справку\n"
+    "/cancel - Отменить последний ответ (шаг назад)\n"
+    "/deletedata - Удалить мои данные"
 )
 
 HELP_TEXT = (
     "<b>Справка по командам:</b>\n\n"
-    "/start — Начать консультацию\n"
-    "/restart — Начать заново\n"
-    "/help — Показать справку\n"
-    "/cancel — Отменить последний ответ (шаг назад)\n"
-    "/deletedata — Удалить мои данные\n\n"
+    "/start - Начать консультацию\n"
+    "/restart - Начать заново\n"
+    "/help - Показать справку\n"
+    "/cancel - Отменить последний ответ (шаг назад)\n"
+    "/deletedata - Удалить мои данные\n\n"
     "Нажимайте на кнопки для навигации.\n"
     "<b>/cancel</b> возвращает к предыдущему вопросу (если он есть)."
 )
@@ -105,7 +105,7 @@ class ConversationContext:
         self.created_at = datetime.now(tz=timezone.utc)
         self.skip_contacts: bool = False
         self.awaiting_delete_confirm: bool = False
-        # (step_id, direction) — шаг, на котором были до последнего ответа
+        # (step_id, direction) - шаг, на котором были до последнего ответа
         self.step_stack: list[tuple[str, str | None]] = []
 
     def set_step(self, step: str):
@@ -171,7 +171,7 @@ class ConversationManager:
                 await self._handle_user_input(message)
 
     # ---------------------------------------------------
-    # /start — welcome; consent или сразу выбор направления
+    # /start - welcome; consent или сразу выбор направления
     # ---------------------------------------------------
 
     async def _handle_start(self, message: IncomingMessage):
@@ -232,7 +232,7 @@ class ConversationManager:
         await self._handle_start(message)
 
     async def _handle_cancel(self, message: IncomingMessage):
-        """Команда /cancel — откат к предыдущему шагу (если был ответ)."""
+        """Команда /cancel - откат к предыдущему шагу (если был ответ)."""
         context = self._get_or_create_context(message)
         if not context.step_stack:
             await self.messenger.send_message(
@@ -278,7 +278,7 @@ class ConversationManager:
         )
 
     async def _handle_unknown_cmd(self, message: IncomingMessage):
-        """Неизвестная команда — показать меню."""
+        """Неизвестная команда - показать меню."""
         await self.messenger.send_message(
             OutgoingMessage(
                 chat_id=message.chat_id,
@@ -288,7 +288,7 @@ class ConversationManager:
         )
 
     # ---------------------------------------------------
-    # /admin — админ-панель
+    # /admin - админ-панель
     # ---------------------------------------------------
 
     def _is_admin(self, message: IncomingMessage) -> bool:
@@ -317,9 +317,9 @@ class ConversationManager:
     async def _admin_menu(self, message: IncomingMessage):
         text = (
             "<b>🔐 Админ-панель</b>\n\n"
-            "/stats — Статистика бота\n"
-            "/users — Последние клиенты\n"
-            "/export — Выгрузка контактов (CSV)"
+            "/stats - Статистика бота\n"
+            "/users - Последние клиенты\n"
+            "/export - Выгрузка контактов (CSV)"
         )
         await self.messenger.send_message(
             OutgoingMessage(
@@ -369,7 +369,7 @@ class ConversationManager:
                 lines.append(
                     f"• <b>{u['name']}</b>\n"
                     f"  📞 {u['phone']}"
-                    + (f"  ✉ {u['email']}" if u["email"] != "—" else "")
+                    + (f"  ✉ {u['email']}" if u["email"] != "-" else "")
                     + f"\n  📅 {u['created']}"
                 )
             text = "\n".join(lines)
@@ -401,7 +401,7 @@ class ConversationManager:
         )
 
     # ---------------------------------------------------
-    # /deletedata — удаление данных
+    # /deletedata - удаление данных
     # ---------------------------------------------------
 
     async def _handle_delete_request(self, message: IncomingMessage):
@@ -440,10 +440,17 @@ class ConversationManager:
             )
             return
 
-        if context.user_db_id:
-            async with async_session_factory() as session:
-                svc = ConsultationService(session)
-                await svc.delete_user_data(context.user_db_id)
+        async with async_session_factory() as session:
+            svc = ConsultationService(session)
+            user_id = context.user_db_id
+            if user_id is None:
+                user = await svc.get_user_by_messenger(
+                    messenger_user_id=message.user_id,
+                    messenger_type=self.messenger.messenger_type,
+                )
+                user_id = user.id if user else None
+            if user_id:
+                await svc.delete_user_data(user_id)
                 await session.commit()
 
         key = self._context_key(message)

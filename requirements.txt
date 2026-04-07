@@ -1,4 +1,4 @@
-# Legal Consultation Bot — зависимости
+# Legal Consultation Bot - зависимости
 # pip install -r requirements.txt
 
 # Telegram

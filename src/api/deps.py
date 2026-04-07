@@ -19,7 +19,7 @@ async def verify_integration_auth(
     authorization: Annotated[str | None, Header()] = None,
     x_api_key: Annotated[str | None, Header(alias="X-API-Key")] = None,
 ) -> None:
-    """Если INTEGRATION_API_TOKEN задан — требуется Bearer или X-API-Key."""
+    """Если INTEGRATION_API_TOKEN задан - требуется Bearer или X-API-Key."""
     expected = settings.INTEGRATION_API_TOKEN.strip()
     if not expected:
         return

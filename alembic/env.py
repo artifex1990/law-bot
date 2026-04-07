@@ -1,4 +1,4 @@
-"""Alembic env — поддержка async SQLAlchemy + .env конфигурации."""
+"""Alembic env - поддержка async SQLAlchemy + .env конфигурации."""
 
 import asyncio
 import sys

@@ -12,7 +12,7 @@ from src.api.router_integration import router as integration_router
 from src.config.settings import settings
 
 app = FastAPI(
-    title="Legal Bot — Integration API",
+    title="Legal Bot - Integration API",
     version=settings.VERSION,
     description=API_DESCRIPTION,
     openapi_tags=OPENAPI_TAGS,

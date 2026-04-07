@@ -1,4 +1,4 @@
-name: Security — dependencies audit
+name: Security - dependencies audit
 
 on:
   push:

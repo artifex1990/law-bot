@@ -140,7 +140,7 @@ async def list_consultations(
     description=(
         "Отправляет JSON заявки на URL из **OUTBOUND_WEBHOOK_URL** "
         "(тот же формат, что при автоматической отправке из бота). "
-        "Заголовок Bearer к удалённому серверу — если задан "
+        "Заголовок Bearer к удалённому серверу - если задан "
         "**OUTBOUND_WEBHOOK_TOKEN**."
     ),
     responses={
