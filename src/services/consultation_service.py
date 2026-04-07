@@ -70,9 +70,9 @@ class ConsultationService:
     async def update_chat_direction(
         self,
         chat_id: int,
-        direction: str,
+        direction: str | None,
     ):
-        """Обновить направление чата"""
+        """Обновить направление чата (None — главное меню до выбора темы)."""
         query = select(Chat).where(Chat.id == chat_id)
         result = await self.session.execute(query)
         chat = result.scalar_one_or_none()
@@ -228,6 +228,16 @@ class ConsultationService:
             update(User)
             .where(User.id == user_id)
             .values(privacy_consent_at=now, updated_at=now),
+        )
+        await self.session.flush()
+
+    async def clear_privacy_consent(self, user_id: int) -> None:
+        """Сбросить отметку согласия (шаг назад к запросу ПДн)."""
+        now = datetime.now(timezone.utc)
+        await self.session.execute(
+            update(User)
+            .where(User.id == user_id)
+            .values(privacy_consent_at=None, updated_at=now),
         )
         await self.session.flush()
 
