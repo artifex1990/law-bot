@@ -25,18 +25,20 @@ class Chat(Base):
         index=True,
     )
     direction: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    started_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow
+    )
     completed_at: Mapped[datetime | None] = mapped_column(
-        DateTime, nullable=True
+        DateTime(timezone=True), nullable=True
     )
     status: Mapped[str] = mapped_column(String(50), default="active")
 
     last_activity_at: Mapped[datetime] = mapped_column(
-        DateTime, default=_utcnow
+        DateTime(timezone=True), default=_utcnow
     )
     reminder_count: Mapped[int] = mapped_column(Integer, default=0)
     last_reminder_at: Mapped[datetime | None] = mapped_column(
-        DateTime, nullable=True
+        DateTime(timezone=True), nullable=True
     )
     current_step: Mapped[str | None] = mapped_column(String(100), nullable=True)
 

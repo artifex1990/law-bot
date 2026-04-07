@@ -31,9 +31,11 @@ class User(Base):
         nullable=True,
         index=True,
     )
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow
+    )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime,
+        DateTime(timezone=True),
         default=_utcnow,
         onupdate=_utcnow,
     )
@@ -41,7 +43,7 @@ class User(Base):
     # Согласие на обработку ПДн (ФЗ-152); сбрасывается при удалении
     # № пользователя из БД
     privacy_consent_at: Mapped[datetime | None] = mapped_column(
-        DateTime,
+        DateTime(timezone=True),
         nullable=True,
     )
 

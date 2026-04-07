@@ -27,6 +27,8 @@ class ConversationStep(Base):
     )
     step_name: Mapped[str] = mapped_column(String(100), nullable=False)
     step_data: Mapped[Any | None] = mapped_column(JSON, nullable=True)
-    completed_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+    completed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow
+    )
 
     chat = relationship("Chat", back_populates="conversation_steps")

@@ -41,16 +41,18 @@ class Consultation(Base):
     direction: Mapped[str] = mapped_column(String(100), nullable=False)
     status: Mapped[str] = mapped_column(String(50), default="pending")
     scheduled_at: Mapped[datetime | None] = mapped_column(
-        DateTime,
+        DateTime(timezone=True),
         nullable=True,
     )
     lawyer_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     is_paid: Mapped[bool] = mapped_column(Boolean, default=False)
     payment_amount: Mapped[float | None] = mapped_column(Float, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow
+    )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime,
+        DateTime(timezone=True),
         default=_utcnow,
         onupdate=_utcnow,
     )
