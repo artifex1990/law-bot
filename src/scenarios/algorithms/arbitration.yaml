@@ -1,0 +1,114 @@
+algorithm:
+  name: "Арбитражный юрист - платная консультация"
+  direction: "arbitration"
+  version: "2.0"
+  is_paid: true
+  price: 5000
+
+  steps:
+    - id: "greeting"
+      type: "text"
+      content: |
+        Здравствуйте! Я <b>Алексей</b>, ваш помощник по арбитражным делам.
+
+        Экономические споры требуют профессионального подхода. Мы обеспечим надёжное представительство.
+      next_step: "problem_quiz"
+
+    - id: "problem_quiz"
+      type: "question"
+      content: "Нужно ли вам содействие в арбитражных делах?"
+      buttons:
+        - text: "⚖ Экономические споры"
+          value: "economic_disputes"
+          next_step: "readiness_quiz"
+        - text: "📋 Подготовка исков / отзывов"
+          value: "claims"
+          next_step: "readiness_quiz"
+        - text: "🏛 Представительство в суде"
+          value: "representation"
+          next_step: "readiness_quiz"
+        - text: "🤝 Медиация / примирение"
+          value: "mediation"
+          next_step: "readiness_quiz"
+
+    - id: "readiness_quiz"
+      type: "question"
+      content: "Оцените вашу готовность к действиям:"
+      buttons:
+        - text: "🔥 Готов(а) подать иск немедленно"
+          value: "ready_now"
+          next_step: "significance_quiz"
+        - text: "🤔 Изучаю перспективы дела"
+          value: "thinking"
+          next_step: "significance_quiz"
+        - text: "📋 Пассивный наблюдатель"
+          value: "just_info"
+          next_step: "significance_quiz"
+
+    - id: "significance_quiz"
+      type: "question"
+      content: "Насколько важна для вас эта проблема?"
+      buttons:
+        - text: "⚡ Финансовая составляющая - чрезвычайно"
+          value: "critical"
+          next_step: "paid_value"
+        - text: "⏳ Средний уровень воздействия"
+          value: "important"
+          next_step: "paid_value"
+        - text: "📌 Минорная роль, незначительная"
+          value: "normal"
+          next_step: "paid_value"
+
+    - id: "paid_value"
+      type: "text"
+      content: |
+        Наши арбитражные юристы имеют <b>обширную практику</b> в судах всех инстанций. Мы ведём дела на миллиарды рублей.
+
+        💡 Если после консультации вы закажете услугу - консультация бесплатна.
+      next_step: "success_cases"
+
+    - id: "success_cases"
+      type: "question"
+      content: "Хотите увидеть пример успешного дела?"
+      buttons:
+        - text: "✅ Да, покажите"
+          value: "show_case"
+          next_step: "case_display"
+        - text: "➡ Перейти к записи"
+          value: "skip_case"
+          next_step: "contact_collection"
+
+    - id: "case_display"
+      type: "text"
+      content: |
+        📌 <b>Кейс: Взыскание дебиторской задолженности 15 млн ₽</b>
+
+        Контрагент отказался оплачивать поставленный товар. Попытки досудебного урегулирования провалились.
+
+        ✅ Подготовлен иск с полной доказательной базой
+        ✅ Выиграно дело в первой инстанции
+        ✅ Полное взыскание + проценты
+        ✅ Срок: 5 месяцев
+      next_step: "contact_collection"
+
+    - id: "contact_collection"
+      type: "contact"
+      content: |
+        📝 Для записи на консультацию оставьте контактные данные.
+
+        Нажмите «📱 Поделиться контактом» или отправьте:
+        <b>Имя Фамилия, +7XXXXXXXXXX</b>
+      next_step: "confirmation"
+
+    - id: "confirmation"
+      type: "end"
+      content: |
+        ✅ <b>Заявка принята!</b>
+
+        📋 Направление: Арбитражный юрист
+        💰 Стоимость консультации: 5 000 ₽
+
+        Менеджер свяжется с вами в ближайшее время.
+
+        /start - Новая консультация
+      final_step: true

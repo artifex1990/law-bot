@@ -1,0 +1,114 @@
+algorithm:
+  name: "Интеллектуальная собственность - платная консультация"
+  direction: "ip"
+  version: "2.0"
+  is_paid: true
+  price: 5000
+
+  steps:
+    - id: "greeting"
+      type: "text"
+      content: |
+        Здравствуйте! Я <b>Алексей</b>, ваш помощник по вопросам интеллектуальной собственности.
+
+        Защита ваших идей - это защита вашего будущего. Мы обеспечим надёжную правовую охрану.
+      next_step: "problem_quiz"
+
+    - id: "problem_quiz"
+      type: "question"
+      content: "Требуется защита интеллектуальной собственности?"
+      buttons:
+        - text: "💡 Патентование изобретения"
+          value: "patent"
+          next_step: "readiness_quiz"
+        - text: "™ Регистрация товарного знака"
+          value: "trademark"
+          next_step: "readiness_quiz"
+        - text: "🏴‍☠ Пиратство / незаконное использование"
+          value: "piracy"
+          next_step: "readiness_quiz"
+        - text: "📋 Расторжение лицензионных договоров"
+          value: "license_termination"
+          next_step: "readiness_quiz"
+
+    - id: "readiness_quiz"
+      type: "question"
+      content: "Оцените вашу готовность к действиям:"
+      buttons:
+        - text: "🔥 Готов(а) подать иск и запустить защиту"
+          value: "ready_now"
+          next_step: "significance_quiz"
+        - text: "🤔 Жду консультаций от специалистов"
+          value: "thinking"
+          next_step: "significance_quiz"
+        - text: "📋 Наблюдаю и не принимаю мер"
+          value: "just_info"
+          next_step: "significance_quiz"
+
+    - id: "significance_quiz"
+      type: "question"
+      content: "Насколько важна для вас эта проблема?"
+      buttons:
+        - text: "⚡ Уникальность произведения под угрозой"
+          value: "critical"
+          next_step: "paid_value"
+        - text: "⏳ Стандартная ситуация"
+          value: "important"
+          next_step: "paid_value"
+        - text: "📌 Независимое творчество, не критично"
+          value: "normal"
+          next_step: "paid_value"
+
+    - id: "paid_value"
+      type: "text"
+      content: |
+        Наши IP-юристы специализируются на <b>защите авторских прав, патентов и товарных знаков</b>. Работаем с Роспатентом и международными организациями.
+
+        💡 Если после консультации вы закажете услугу - консультация бесплатна.
+      next_step: "success_cases"
+
+    - id: "success_cases"
+      type: "question"
+      content: "Хотите увидеть пример успешного дела?"
+      buttons:
+        - text: "✅ Да, покажите"
+          value: "show_case"
+          next_step: "case_display"
+        - text: "➡ Перейти к записи"
+          value: "skip_case"
+          next_step: "contact_collection"
+
+    - id: "case_display"
+      type: "text"
+      content: |
+        📌 <b>Кейс: Защита товарного знака от контрафакта</b>
+
+        Конкурент использовал похожий товарный знак. Бренд клиента терял рыночную долю.
+
+        ✅ Подтверждено нарушение в ФАС
+        ✅ Запрещено использование спорного знака
+        ✅ Взыскана компенсация 2 млн руб.
+        ✅ Срок: 5 месяцев
+      next_step: "contact_collection"
+
+    - id: "contact_collection"
+      type: "contact"
+      content: |
+        📝 Для записи на консультацию оставьте контактные данные.
+
+        Нажмите «📱 Поделиться контактом» или отправьте:
+        <b>Имя Фамилия, +7XXXXXXXXXX</b>
+      next_step: "confirmation"
+
+    - id: "confirmation"
+      type: "end"
+      content: |
+        ✅ <b>Заявка принята!</b>
+
+        📋 Направление: Интеллектуальная собственность
+        💰 Стоимость консультации: 5 000 ₽
+
+        Менеджер свяжется с вами в ближайшее время.
+
+        /start - Новая консультация
+      final_step: true

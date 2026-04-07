@@ -1,0 +1,106 @@
+[tool.poetry]
+name = "legal-consultation-bot"
+version = "2.1.0"
+description = "Универсальный чат-бот для записи на юридические консультации"
+authors = ["Legal Bot Team"]
+readme = "README.md"
+license = "MIT"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.12"
+aiogram = "^3.13.0"
+sqlalchemy = "^2.0.36"
+alembic = "^1.13.0"
+asyncpg = "^0.29.0"
+aiosqlite = "^0.20.0"
+pydantic = "^2.9.0"
+python-dotenv = "^1.0.1"
+pyyaml = "^6.0.2"
+aiohttp = "^3.11.0"
+loguru = "^0.7.2"
+maxapi = "^0.9.0"
+fastapi = "^0.115.0"
+uvicorn = {extras = ["standard"], version = "^0.32.0"}
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.8.0"
+mypy = "^1.13.0"
+pre-commit = "^4.0.0"
+pytest = "^8.0.0"
+pytest-asyncio = "^0.24.0"
+types-PyYAML = "^6.0.12"
+
+# ----------------------------------------------------------------
+# Ruff - линтер + форматтер (заменяет flake8, black, isort, pylint)
+# ----------------------------------------------------------------
+[tool.ruff]
+target-version = "py312"
+line-length = 80
+src = ["src"]
+
+[tool.ruff.lint]
+select = [
+    "F",      # pyflakes
+    "E", "W", # pycodestyle (errors + warnings)
+    "I",      # isort
+    "N",      # pep8-naming
+    "UP",     # pyupgrade
+    "B",      # flake8-bugbear
+    "A",      # flake8-builtins
+    "C4",     # flake8-comprehensions
+    "SIM",    # flake8-simplify
+    "TCH",    # flake8-type-checking
+    "RUF",    # ruff-specific rules
+    "PT",     # flake8-pytest-style
+    "RET",    # flake8-return
+    "PIE",    # flake8-pie
+    "T20",    # flake8-print
+    "Q",      # flake8-quotes
+    "DTZ",    # flake8-datetimez
+    "ASYNC",  # flake8-async
+]
+ignore = [
+    "E501",   # line too long - форматтер справится
+    "RUF001", # cyrillic in strings - у нас русские тексты
+    "RUF002", # cyrillic docstrings
+    "RUF003", # cyrillic comments
+    "T201",   # print() - иногда нужен при отладке
+    "UP017",  # timezone.utc вместо datetime.UTC - совместимость со stubs mypy
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/main.py" = ["E402"]  # sys.path перед импортами
+"tests/*" = ["S101"]       # assert в тестах - ok
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+docstring-code-format = true
+
+# ----------------------------------------------------------------
+# mypy - проверка типов
+# ----------------------------------------------------------------
+[tool.mypy]
+python_version = "3.12"
+plugins = ["sqlalchemy.ext.mypy.plugin"]
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+
+# ----------------------------------------------------------------
+# pytest
+# ----------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -1,0 +1,100 @@
+algorithm:
+  name: "Юридическая консультация"
+  direction: "template"
+  version: "2.0"
+  is_paid: true
+  price: 5000
+
+  steps:
+    - id: "greeting"
+      type: "text"
+      content: |
+        Здравствуйте! Я ваш помощник по юридическим вопросам.
+
+        Мы поможем вам разобраться в ситуации и найти правильное решение.
+      # ---- медиа-вложения (необязательно) ----
+      # Типы: photo, video_note (кружочек), video, animation (GIF), sticker
+      # Файлы хранятся в src/scenarios/media/
+      media:
+        - type: "photo"
+          file: "src/scenarios/media/example.jpg"
+          caption: "Подпись к фото (необязательно)"
+        # - type: "video_note"
+        #   file: "src/scenarios/media/greeting_circle.mp4"
+        # - type: "animation"
+        #   file: "src/scenarios/media/welcome.gif"
+      next_step: "problem_quiz"
+
+    - id: "problem_quiz"
+      type: "question"
+      content: "Какая проблема вас беспокоит?"
+      buttons:
+        - text: "📋 Нужна консультация специалиста"
+          value: "need_consultation"
+          next_step: "readiness_quiz"
+        - text: "⚖ Есть конкретная проблема"
+          value: "has_problem"
+          next_step: "readiness_quiz"
+        - text: "📝 Нужна помощь с документами"
+          value: "documents"
+          next_step: "readiness_quiz"
+        - text: "🔍 Просто хочу узнать информацию"
+          value: "just_info_problem"
+          next_step: "readiness_quiz"
+
+    - id: "readiness_quiz"
+      type: "question"
+      content: "Оцените вашу готовность к действиям:"
+      buttons:
+        - text: "🔥 Готов(а) действовать немедленно"
+          value: "ready_now"
+          next_step: "significance_quiz"
+        - text: "🤔 Размышляю и оцениваю"
+          value: "thinking"
+          next_step: "significance_quiz"
+        - text: "📋 Только собираю информацию"
+          value: "just_info"
+          next_step: "significance_quiz"
+
+    - id: "significance_quiz"
+      type: "question"
+      content: "Насколько важна для вас эта проблема?"
+      buttons:
+        - text: "⚡ Критично - нужно решить немедленно"
+          value: "critical"
+          next_step: "paid_value"
+        - text: "⏳ Важно, но терпит время"
+          value: "important"
+          next_step: "paid_value"
+        - text: "📌 Не критично"
+          value: "normal"
+          next_step: "paid_value"
+
+    - id: "paid_value"
+      type: "text"
+      content: |
+        Наши юристы обеспечивают <b>индивидуальный подход</b> к каждому делу. Многолетний опыт и тысячи успешных дел.
+
+        💡 Если после консультации вы закажете услугу - консультация бесплатна.
+      next_step: "contact_collection"
+
+    - id: "contact_collection"
+      type: "contact"
+      content: |
+        📝 Для записи на консультацию оставьте контактные данные.
+
+        Нажмите «📱 Поделиться контактом» или отправьте:
+        <b>Имя Фамилия, +7XXXXXXXXXX</b>
+      next_step: "confirmation"
+
+    - id: "confirmation"
+      type: "end"
+      content: |
+        ✅ <b>Заявка принята!</b>
+
+        💰 Стоимость консультации: 5 000 ₽
+
+        Менеджер свяжется с вами в ближайшее время.
+
+        /start - Новая консультация
+      final_step: true

@@ -1,0 +1,103 @@
+algorithm:
+  name: "Главное меню - приветствие и выбор направления"
+  direction: "main"
+  version: "2.0"
+  is_paid: false
+
+  steps:
+    - id: "welcome"
+      type: "photo"
+      photo: "src/scenarios/assets/welcome.jpg"
+      content: |
+        Если у вас есть долги по кредитам и займам, запишитесь на <b>бесплатную консультацию</b>. Работаем по всей РФ!
+
+        На консультации вы узнаете:
+        🔵 Что делать если вы угодили в кредитный капкан
+        🔵 Законные способы списания долгов
+        🔵 Как сохранить жилье и авто
+        🔵 Как освободиться от процентов и штрафов при просрочках
+        🔵 Как защитить себя от коллекторов
+
+        Также вы получите:
+        🎁 Бесплатный набор документов для защиты от коллекторов, чтобы не звонили вам и вашим знакомым
+      next_step: "consent"
+
+    - id: "consent"
+      type: "question"
+      content: |
+        Для продолжения работы необходимо ваше согласие на обработку персональных данных в соответствии с ФЗ-152 «О персональных данных».
+
+        Вы согласны на обработку персональных данных?
+      buttons:
+        - text: "✅ Да, я согласен(на)"
+          value: "agree"
+          next_step: "direction_selection"
+        - text: "❌ Нет"
+          value: "disagree"
+          next_step: "goodbye_no_consent"
+
+    - id: "goodbye_no_consent"
+      type: "end"
+      content: |
+        Благодарим за обращение! К сожалению, без согласия на обработку данных мы не можем продолжить.
+
+        Если передумаете - нажмите /start
+
+        Желаем удачи! 🙏
+      final_step: true
+
+    - id: "direction_selection"
+      type: "question"
+      content: |
+        <b>Здравствуйте!</b> Меня зовут Виктория, я здесь, чтобы помочь вам найти ответы на самые важные юридические вопросы.
+
+        Пожалуйста, скажите, какая область вас беспокоит?
+      buttons:
+        - text: "💥 Банкротство физлиц"
+          value: "bankruptcy"
+          next_step: "load_direction"
+        - text: "🛡 Военный юрист"
+          value: "military"
+          next_step: "load_direction"
+        - text: "👨‍👩‍👧 Семейные дела"
+          value: "family"
+          next_step: "load_direction"
+        - text: "🩺 Медицинский юрист"
+          value: "medical"
+          next_step: "load_direction"
+        - text: "🌅 Пенсионный юрист"
+          value: "pension"
+          next_step: "load_direction"
+        - text: "📌 Трудовые споры"
+          value: "labor"
+          next_step: "load_direction"
+        - text: "🛒 Защита прав потребителей"
+          value: "consumer"
+          next_step: "load_direction"
+        - text: "📜 Наследство"
+          value: "inheritance"
+          next_step: "load_direction"
+        - text: "📚 Интеллект. собственность"
+          value: "ip"
+          next_step: "load_direction"
+        - text: "🏠 Недвижимость"
+          value: "real_estate"
+          next_step: "load_direction"
+        - text: "🗺 Земельное право"
+          value: "land"
+          next_step: "load_direction"
+        - text: "🚗 Автоюрист"
+          value: "auto"
+          next_step: "load_direction"
+        - text: "⚖ Уголовные дела"
+          value: "criminal"
+          next_step: "load_direction"
+        - text: "💰 Налоговый юрист"
+          value: "tax"
+          next_step: "load_direction"
+        - text: "🏢 Юрист для бизнеса"
+          value: "business"
+          next_step: "load_direction"
+        - text: "📊 Арбитражный юрист"
+          value: "arbitration"
+          next_step: "load_direction"

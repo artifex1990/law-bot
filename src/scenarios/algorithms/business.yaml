@@ -1,0 +1,114 @@
+algorithm:
+  name: "Юрист для бизнеса - платная консультация"
+  direction: "business"
+  version: "2.0"
+  is_paid: true
+  price: 5000
+
+  steps:
+    - id: "greeting"
+      type: "text"
+      content: |
+        Здравствуйте! Я <b>Алексей</b>, ваш помощник по бизнес-юридическим вопросам.
+
+        Бизнес требует надёжной правовой защиты. Мы обеспечим юридическую безопасность вашего дела.
+      next_step: "problem_quiz"
+
+    - id: "problem_quiz"
+      type: "question"
+      content: "Возникли проблемы с организацией или ведением бизнеса?"
+      buttons:
+        - text: "🏢 Создание / регистрация бизнеса"
+          value: "registration"
+          next_step: "readiness_quiz"
+        - text: "🔄 Изменение организационной формы"
+          value: "restructuring"
+          next_step: "readiness_quiz"
+        - text: "💰 Налогообложение и бухучёт"
+          value: "accounting"
+          next_step: "readiness_quiz"
+        - text: "⚖ Споры с контрагентами"
+          value: "disputes"
+          next_step: "readiness_quiz"
+
+    - id: "readiness_quiz"
+      type: "question"
+      content: "Оцените вашу готовность к действиям:"
+      buttons:
+        - text: "🔥 Готов(а) реализовать проект немедленно"
+          value: "ready_now"
+          next_step: "significance_quiz"
+        - text: "🤔 Изучаю документацию и думаю"
+          value: "thinking"
+          next_step: "significance_quiz"
+        - text: "📋 Не интересуюсь активно"
+          value: "just_info"
+          next_step: "significance_quiz"
+
+    - id: "significance_quiz"
+      type: "question"
+      content: "Насколько важна для вас эта проблема?"
+      buttons:
+        - text: "⚡ Бизнес - основа благосостояния"
+          value: "critical"
+          next_step: "paid_value"
+        - text: "⏳ Новое направление, средняя важность"
+          value: "important"
+          next_step: "paid_value"
+        - text: "📌 Планы пока на втором плане"
+          value: "normal"
+          next_step: "paid_value"
+
+    - id: "paid_value"
+      type: "text"
+      content: |
+        Наши бизнес-юристы сопровождают компании <b>от регистрации до выхода на IPO</b>. Полное юридическое обслуживание предприятий любого масштаба.
+
+        💡 Если после консультации вы закажете услугу - консультация бесплатна.
+      next_step: "success_cases"
+
+    - id: "success_cases"
+      type: "question"
+      content: "Хотите увидеть пример успешного дела?"
+      buttons:
+        - text: "✅ Да, покажите"
+          value: "show_case"
+          next_step: "case_display"
+        - text: "➡ Перейти к записи"
+          value: "skip_case"
+          next_step: "contact_collection"
+
+    - id: "case_display"
+      type: "text"
+      content: |
+        📌 <b>Кейс: Защита бизнеса от рейдерского захвата</b>
+
+        Конкуренты пытались через суд оспорить учредительные документы и получить контроль над компанией.
+
+        ✅ Подготовлена правовая позиция
+        ✅ Все иски конкурентов отклонены
+        ✅ Защищена собственность на 100%
+        ✅ Срок: 4 месяца
+      next_step: "contact_collection"
+
+    - id: "contact_collection"
+      type: "contact"
+      content: |
+        📝 Для записи на консультацию оставьте контактные данные.
+
+        Нажмите «📱 Поделиться контактом» или отправьте:
+        <b>Имя Фамилия, +7XXXXXXXXXX</b>
+      next_step: "confirmation"
+
+    - id: "confirmation"
+      type: "end"
+      content: |
+        ✅ <b>Заявка принята!</b>
+
+        📋 Направление: Бизнес-право
+        💰 Стоимость консультации: 5 000 ₽
+
+        Менеджер свяжется с вами в ближайшее время.
+
+        /start - Новая консультация
+      final_step: true

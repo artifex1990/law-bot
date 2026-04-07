@@ -1,0 +1,114 @@
+algorithm:
+  name: "Наследственное право - платная консультация"
+  direction: "inheritance"
+  version: "2.0"
+  is_paid: true
+  price: 5000
+
+  steps:
+    - id: "greeting"
+      type: "text"
+      content: |
+        Здравствуйте! Я <b>Алексей</b>, ваш помощник по вопросам наследства.
+
+        Наследственные вопросы требуют особой деликатности. Мы поможем вам пройти этот процесс грамотно.
+      next_step: "problem_quiz"
+
+    - id: "problem_quiz"
+      type: "question"
+      content: "Интересуетесь вопросами наследственного права?"
+      buttons:
+        - text: "📜 Принятие наследства"
+          value: "accept_inheritance"
+          next_step: "readiness_quiz"
+        - text: "⚖ Споры между наследниками"
+          value: "disputes"
+          next_step: "readiness_quiz"
+        - text: "❌ Оспаривание завещания"
+          value: "contest_will"
+          next_step: "readiness_quiz"
+        - text: "🌍 Наследство нерезидента"
+          value: "foreign_heir"
+          next_step: "readiness_quiz"
+
+    - id: "readiness_quiz"
+      type: "question"
+      content: "Оцените вашу готовность к действиям:"
+      buttons:
+        - text: "🔥 Готов(а) оформить документы и подать иск"
+          value: "ready_now"
+          next_step: "significance_quiz"
+        - text: "🤔 Постепенно собираю бумаги"
+          value: "thinking"
+          next_step: "significance_quiz"
+        - text: "📋 Не тороплюсь с решением"
+          value: "just_info"
+          next_step: "significance_quiz"
+
+    - id: "significance_quiz"
+      type: "question"
+      content: "Насколько важна для вас эта проблема?"
+      buttons:
+        - text: "⚡ Первостепенная - имущество огромной ценности"
+          value: "critical"
+          next_step: "paid_value"
+        - text: "⏳ Средняя - активы скромные"
+          value: "important"
+          next_step: "paid_value"
+        - text: "📌 Малозначимый вопрос"
+          value: "normal"
+          next_step: "paid_value"
+
+    - id: "paid_value"
+      type: "text"
+      content: |
+        Наши юристы по наследственному праву ведут дела <b>любой сложности</b> - от стандартного оформления до международных наследственных споров.
+
+        💡 Если после консультации вы закажете услугу - консультация бесплатна.
+      next_step: "success_cases"
+
+    - id: "success_cases"
+      type: "question"
+      content: "Хотите увидеть пример успешного дела?"
+      buttons:
+        - text: "✅ Да, покажите"
+          value: "show_case"
+          next_step: "case_display"
+        - text: "➡ Перейти к записи"
+          value: "skip_case"
+          next_step: "contact_collection"
+
+    - id: "case_display"
+      type: "text"
+      content: |
+        📌 <b>Кейс: Восстановление наследственных прав на квартиру</b>
+
+        Клиент пропустил срок вступления в наследство. Другие наследники уже оформили собственность.
+
+        ✅ Восстановлен срок через суд
+        ✅ Признано право на 1/2 квартиры
+        ✅ Справедливый раздел имущества
+        ✅ Срок: 4 месяца
+      next_step: "contact_collection"
+
+    - id: "contact_collection"
+      type: "contact"
+      content: |
+        📝 Для записи на консультацию оставьте контактные данные.
+
+        Нажмите «📱 Поделиться контактом» или отправьте:
+        <b>Имя Фамилия, +7XXXXXXXXXX</b>
+      next_step: "confirmation"
+
+    - id: "confirmation"
+      type: "end"
+      content: |
+        ✅ <b>Заявка принята!</b>
+
+        📋 Направление: Наследственное право
+        💰 Стоимость консультации: 5 000 ₽
+
+        Менеджер свяжется с вами в ближайшее время.
+
+        /start - Новая консультация
+      final_step: true

@@ -1,0 +1,52 @@
+name: CI - Lint, Types & Tests
+
+on:
+  push:
+    branches: [master, dev, release]
+  pull_request:
+    branches: [master, dev, release]
+
+jobs:
+  lint:
+    name: Ruff lint + format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ruff
+      - run: ruff format --check src/ tests/
+      - run: ruff check src/ tests/
+
+  typecheck:
+    name: mypy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          pip install mypy sqlalchemy[mypy] types-PyYAML
+          pip install -r requirements.txt
+      - run: mypy src/ --config-file pyproject.toml
+
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: "sqlite+aiosqlite:///:memory:"
+      TELEGRAM_BOT_TOKEN: ""
+      MAX_BOT_TOKEN: ""
+      BACKUP_ENABLED: "False"
+      DEBUG: "False"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio
+      - run: pytest tests/ -v --tb=short

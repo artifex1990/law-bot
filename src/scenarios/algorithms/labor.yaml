@@ -1,0 +1,114 @@
+algorithm:
+  name: "Трудовые споры - платная консультация"
+  direction: "labor"
+  version: "2.0"
+  is_paid: true
+  price: 5000
+
+  steps:
+    - id: "greeting"
+      type: "text"
+      content: |
+        Здравствуйте! Я <b>Алексей</b>, ваш помощник по трудовым вопросам.
+
+        Трудовые права - это основа вашей стабильности. Мы поможем восстановить справедливость.
+      next_step: "problem_quiz"
+
+    - id: "problem_quiz"
+      type: "question"
+      content: "Возникли ли у вас проблемы на рабочем месте?"
+      buttons:
+        - text: "💸 Невыплата зарплаты / премии"
+          value: "unpaid_salary"
+          next_step: "readiness_quiz"
+        - text: "📄 Незаконное увольнение"
+          value: "illegal_dismissal"
+          next_step: "readiness_quiz"
+        - text: "⚠ Нарушение условий труда"
+          value: "labor_conditions"
+          next_step: "readiness_quiz"
+        - text: "⚖ Судебный спор с работодателем"
+          value: "court_dispute"
+          next_step: "readiness_quiz"
+
+    - id: "readiness_quiz"
+      type: "question"
+      content: "Оцените вашу готовность к действиям:"
+      buttons:
+        - text: "🔥 Готов(а) предъявить ультиматум"
+          value: "ready_now"
+          next_step: "significance_quiz"
+        - text: "🤔 Наблюдаю за ситуацией"
+          value: "thinking"
+          next_step: "significance_quiz"
+        - text: "📋 Пассивное наблюдение"
+          value: "just_info"
+          next_step: "significance_quiz"
+
+    - id: "significance_quiz"
+      type: "question"
+      content: "Насколько важна для вас эта проблема?"
+      buttons:
+        - text: "⚡ Жизненно важно - рабочий статус"
+          value: "critical"
+          next_step: "paid_value"
+        - text: "⏳ Промежуточный уровень"
+          value: "important"
+          next_step: "paid_value"
+        - text: "📌 Низкая - работа второстепенна"
+          value: "normal"
+          next_step: "paid_value"
+
+    - id: "paid_value"
+      type: "text"
+      content: |
+        Наши юристы по трудовому праву имеют <b>обширный опыт</b> защиты работников. Мы знаем все нюансы ТК РФ и судебной практики.
+
+        💡 Если после консультации вы закажете услугу - консультация бесплатна.
+      next_step: "success_cases"
+
+    - id: "success_cases"
+      type: "question"
+      content: "Хотите увидеть пример успешного дела?"
+      buttons:
+        - text: "✅ Да, покажите"
+          value: "show_case"
+          next_step: "case_display"
+        - text: "➡ Перейти к записи"
+          value: "skip_case"
+          next_step: "contact_collection"
+
+    - id: "case_display"
+      type: "text"
+      content: |
+        📌 <b>Кейс: Восстановление на работе + компенсация 480 000 ₽</b>
+
+        Сотрудника уволили «по соглашению сторон» под давлением. Мы доказали незаконность увольнения.
+
+        ✅ Восстановление в должности
+        ✅ Выплата за вынужденный прогул
+        ✅ Моральная компенсация
+        ✅ Срок: 4 месяца
+      next_step: "contact_collection"
+
+    - id: "contact_collection"
+      type: "contact"
+      content: |
+        📝 Для записи на консультацию оставьте контактные данные.
+
+        Нажмите «📱 Поделиться контактом» или отправьте:
+        <b>Имя Фамилия, +7XXXXXXXXXX</b>
+      next_step: "confirmation"
+
+    - id: "confirmation"
+      type: "end"
+      content: |
+        ✅ <b>Заявка принята!</b>
+
+        📋 Направление: Трудовые споры
+        💰 Стоимость консультации: 5 000 ₽
+
+        Менеджер свяжется с вами в ближайшее время.
+
+        /start - Новая консультация
+      final_step: true

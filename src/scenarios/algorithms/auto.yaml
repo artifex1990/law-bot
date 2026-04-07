@@ -1,0 +1,114 @@
+algorithm:
+  name: "Автоюрист - платная консультация"
+  direction: "auto"
+  version: "2.0"
+  is_paid: true
+  price: 5000
+
+  steps:
+    - id: "greeting"
+      type: "text"
+      content: |
+        Здравствуйте! Я <b>Алексей</b>, ваш помощник по автомобильным юридическим вопросам.
+
+        Проблемы с транспортом решаются быстро, если действовать грамотно. Мы поможем!
+      next_step: "problem_quiz"
+
+    - id: "problem_quiz"
+      type: "question"
+      content: "Проблемы с автомобилем или транспортным средством?"
+      buttons:
+        - text: "🚗 ОСАГО/КАСКО не покрыло ущерб"
+          value: "insurance"
+          next_step: "readiness_quiz"
+        - text: "🚔 Незаконное изъятие транспорта"
+          value: "seizure"
+          next_step: "readiness_quiz"
+        - text: "📋 Незаконный штраф / протокол"
+          value: "illegal_fine"
+          next_step: "readiness_quiz"
+        - text: "🔧 Проблемы с техосмотром"
+          value: "inspection"
+          next_step: "readiness_quiz"
+
+    - id: "readiness_quiz"
+      type: "question"
+      content: "Оцените вашу готовность к действиям:"
+      buttons:
+        - text: "🔥 Готов(а) требовать возврат немедленно"
+          value: "ready_now"
+          next_step: "significance_quiz"
+        - text: "🤔 Изучаю информацию"
+          value: "thinking"
+          next_step: "significance_quiz"
+        - text: "📋 Не предпринимаю шагов"
+          value: "just_info"
+          next_step: "significance_quiz"
+
+    - id: "significance_quiz"
+      type: "question"
+      content: "Насколько важна для вас эта проблема?"
+      buttons:
+        - text: "⚡ Машина нужна ежедневно - высочайшая"
+          value: "critical"
+          next_step: "paid_value"
+        - text: "⏳ Пользуюсь периодически - средняя"
+          value: "important"
+          next_step: "paid_value"
+        - text: "📌 Транспорт резервный - низкая"
+          value: "normal"
+          next_step: "paid_value"
+
+    - id: "paid_value"
+      type: "text"
+      content: |
+        Наши автоюристы <b>ежедневно</b> ведут дела против страховых компаний и ГИБДД. Знаем все лазейки и нюансы.
+
+        💡 Если после консультации вы закажете услугу - консультация бесплатна.
+      next_step: "success_cases"
+
+    - id: "success_cases"
+      type: "question"
+      content: "Хотите увидеть пример успешного дела?"
+      buttons:
+        - text: "✅ Да, покажите"
+          value: "show_case"
+          next_step: "case_display"
+        - text: "➡ Перейти к записи"
+          value: "skip_case"
+          next_step: "contact_collection"
+
+    - id: "case_display"
+      type: "text"
+      content: |
+        📌 <b>Кейс: Взыскание со страховой 890 000 ₽</b>
+
+        Страховая занизила выплату по КАСКО в 3 раза. Клиент получил лишь треть реального ущерба.
+
+        ✅ Проведена независимая экспертиза
+        ✅ Подана претензия и иск
+        ✅ Полная выплата + неустойка + штраф
+        ✅ Срок: 2,5 месяца
+      next_step: "contact_collection"
+
+    - id: "contact_collection"
+      type: "contact"
+      content: |
+        📝 Для записи на консультацию оставьте контактные данные.
+
+        Нажмите «📱 Поделиться контактом» или отправьте:
+        <b>Имя Фамилия, +7XXXXXXXXXX</b>
+      next_step: "confirmation"
+
+    - id: "confirmation"
+      type: "end"
+      content: |
+        ✅ <b>Заявка принята!</b>
+
+        📋 Направление: Автоюрист
+        💰 Стоимость консультации: 5 000 ₽
+
+        Менеджер свяжется с вами в ближайшее время.
+
+        /start - Новая консультация
+      final_step: true

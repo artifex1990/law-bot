@@ -1,0 +1,114 @@
+algorithm:
+  name: "Юрист по недвижимости - платная консультация"
+  direction: "real_estate"
+  version: "2.0"
+  is_paid: true
+  price: 5000
+
+  steps:
+    - id: "greeting"
+      type: "text"
+      content: |
+        Здравствуйте! Я <b>Алексей</b>, ваш помощник по вопросам недвижимости.
+
+        Вопросы с недвижимостью - одни из самых важных в жизни. Мы поможем решить их грамотно и безопасно.
+      next_step: "problem_quiz"
+
+    - id: "problem_quiz"
+      type: "question"
+      content: "Вы столкнулись с жилищными вопросами?"
+      buttons:
+        - text: "🏠 Проблемы со сделкой"
+          value: "deal_issue"
+          next_step: "readiness_quiz"
+        - text: "🔒 Охрана права собственности"
+          value: "property_protection"
+          next_step: "readiness_quiz"
+        - text: "📝 Регистрация перехода права"
+          value: "registration"
+          next_step: "readiness_quiz"
+        - text: "📏 Споры о границах / площади"
+          value: "boundary_dispute"
+          next_step: "readiness_quiz"
+
+    - id: "readiness_quiz"
+      type: "question"
+      content: "Оцените вашу готовность к действиям:"
+      buttons:
+        - text: "🔥 Готов(а) к судебным процессам"
+          value: "ready_now"
+          next_step: "significance_quiz"
+        - text: "🤔 Хочу понять порядок действий"
+          value: "thinking"
+          next_step: "significance_quiz"
+        - text: "📋 Пассивное наблюдение"
+          value: "just_info"
+          next_step: "significance_quiz"
+
+    - id: "significance_quiz"
+      type: "question"
+      content: "Насколько важна для вас эта проблема?"
+      buttons:
+        - text: "⚡ Дом и квартира - наивысшая важность"
+          value: "critical"
+          next_step: "paid_value"
+        - text: "⏳ Умеренная, не первоочередная"
+          value: "important"
+          next_step: "paid_value"
+        - text: "📌 Низкая - недвижимость далеко"
+          value: "normal"
+          next_step: "paid_value"
+
+    - id: "paid_value"
+      type: "text"
+      content: |
+        Наши юристы по недвижимости проводят <b>полную проверку объектов</b>, сопровождают сделки и защищают ваши права в суде.
+
+        💡 Если после консультации вы закажете услугу - консультация бесплатна.
+      next_step: "success_cases"
+
+    - id: "success_cases"
+      type: "question"
+      content: "Хотите увидеть пример успешного дела?"
+      buttons:
+        - text: "✅ Да, покажите"
+          value: "show_case"
+          next_step: "case_display"
+        - text: "➡ Перейти к записи"
+          value: "skip_case"
+          next_step: "contact_collection"
+
+    - id: "case_display"
+      type: "text"
+      content: |
+        📌 <b>Кейс: Расторжение договора ДДУ и возврат 6,5 млн ₽</b>
+
+        Застройщик нарушил сроки сдачи на 2 года. Клиент хотел вернуть деньги.
+
+        ✅ Подготовлена претензия и иск
+        ✅ Полный возврат средств
+        ✅ Взыскана неустойка 1,2 млн руб.
+        ✅ Срок: 4 месяца
+      next_step: "contact_collection"
+
+    - id: "contact_collection"
+      type: "contact"
+      content: |
+        📝 Для записи на консультацию оставьте контактные данные.
+
+        Нажмите «📱 Поделиться контактом» или отправьте:
+        <b>Имя Фамилия, +7XXXXXXXXXX</b>
+      next_step: "confirmation"
+
+    - id: "confirmation"
+      type: "end"
+      content: |
+        ✅ <b>Заявка принята!</b>
+
+        📋 Направление: Недвижимость
+        💰 Стоимость консультации: 5 000 ₽
+
+        Менеджер свяжется с вами в ближайшее время.
+
+        /start - Новая консультация
+      final_step: true

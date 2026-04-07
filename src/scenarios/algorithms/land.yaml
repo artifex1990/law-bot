@@ -1,0 +1,114 @@
+algorithm:
+  name: "Земельное право - платная консультация"
+  direction: "land"
+  version: "2.0"
+  is_paid: true
+  price: 5000
+
+  steps:
+    - id: "greeting"
+      type: "text"
+      content: |
+        Здравствуйте! Я <b>Алексей</b>, ваш помощник по земельным вопросам.
+
+        Земельные споры требуют специальных знаний. Наша команда разбирается в тонкостях земельного законодательства.
+      next_step: "problem_quiz"
+
+    - id: "problem_quiz"
+      type: "question"
+      content: "Сталкивались ли вы с проблемами, связанными с землёй?"
+      buttons:
+        - text: "🏗 Межевые споры с соседями"
+          value: "boundary_disputes"
+          next_step: "readiness_quiz"
+        - text: "📋 Проблемы с кадастром"
+          value: "cadastre"
+          next_step: "readiness_quiz"
+        - text: "🏠 Планы застройки участка"
+          value: "construction"
+          next_step: "readiness_quiz"
+        - text: "📝 Аренда / пользование участком"
+          value: "lease"
+          next_step: "readiness_quiz"
+
+    - id: "readiness_quiz"
+      type: "question"
+      content: "Оцените вашу готовность к действиям:"
+      buttons:
+        - text: "🔥 Готов(а) собрать документы и подать иск"
+          value: "ready_now"
+          next_step: "significance_quiz"
+        - text: "🤔 Ищу консультации по кадастру"
+          value: "thinking"
+          next_step: "significance_quiz"
+        - text: "📋 Минимальные шаги"
+          value: "just_info"
+          next_step: "significance_quiz"
+
+    - id: "significance_quiz"
+      type: "question"
+      content: "Насколько важна для вас эта проблема?"
+      buttons:
+        - text: "⚡ Земля дорога - огромная значимость"
+          value: "critical"
+          next_step: "paid_value"
+        - text: "⏳ Умеренная важность"
+          value: "important"
+          next_step: "paid_value"
+        - text: "📌 Незначительная, вторична"
+          value: "normal"
+          next_step: "paid_value"
+
+    - id: "paid_value"
+      type: "text"
+      content: |
+        Наши земельные юристы работают с <b>кадастровой палатой, Росреестром</b> и судами всех инстанций.
+
+        💡 Если после консультации вы закажете услугу - консультация бесплатна.
+      next_step: "success_cases"
+
+    - id: "success_cases"
+      type: "question"
+      content: "Хотите увидеть пример успешного дела?"
+      buttons:
+        - text: "✅ Да, покажите"
+          value: "show_case"
+          next_step: "case_display"
+        - text: "➡ Перейти к записи"
+          value: "skip_case"
+          next_step: "contact_collection"
+
+    - id: "case_display"
+      type: "text"
+      content: |
+        📌 <b>Кейс: Восстановление границ участка</b>
+
+        Сосед самовольно передвинул забор, захватив 3 сотки.
+
+        ✅ Проведена кадастровая экспертиза
+        ✅ Восстановлены законные границы
+        ✅ Взыскана компенсация за незаконное использование
+        ✅ Срок: 3 месяца
+      next_step: "contact_collection"
+
+    - id: "contact_collection"
+      type: "contact"
+      content: |
+        📝 Для записи на консультацию оставьте контактные данные.
+
+        Нажмите «📱 Поделиться контактом» или отправьте:
+        <b>Имя Фамилия, +7XXXXXXXXXX</b>
+      next_step: "confirmation"
+
+    - id: "confirmation"
+      type: "end"
+      content: |
+        ✅ <b>Заявка принята!</b>
+
+        📋 Направление: Земельное право
+        💰 Стоимость консультации: 5 000 ₽
+
+        Менеджер свяжется с вами в ближайшее время.
+
+        /start - Новая консультация
+      final_step: true

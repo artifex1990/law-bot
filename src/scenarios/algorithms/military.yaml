@@ -1,0 +1,120 @@
+algorithm:
+  name: "Военный юрист - платная консультация"
+  direction: "military"
+  version: "2.0"
+  is_paid: true
+  price: 5000
+
+  steps:
+    - id: "greeting"
+      type: "text"
+      content: |
+        Здравствуйте! Я <b>Алексей</b>, ваш личный помощник по военно-юридическим вопросам.
+
+        Понимание, что вы оказались в сложной ситуации, - первый шаг к её преодолению. Наша задача - снять груз ответственности и помочь вам чувствовать себя уверенно.
+
+        Давайте разберёмся 👇
+      next_step: "problem_quiz"
+
+    - id: "problem_quiz"
+      type: "question"
+      content: "С какими вопросами военного характера вы столкнулись?"
+      buttons:
+        - text: "📋 Служба по контракту / мобилизация"
+          value: "contract_service"
+          next_step: "readiness_quiz"
+        - text: "🏛 Проблемы с военкоматом / призыв"
+          value: "military_office"
+          next_step: "readiness_quiz"
+        - text: "🎖 Военные льготы и пособия"
+          value: "benefits"
+          next_step: "readiness_quiz"
+        - text: "🩺 ВВК и медосвидетельствование"
+          value: "medical_commission"
+          next_step: "readiness_quiz"
+
+    - id: "readiness_quiz"
+      type: "question"
+      content: "Оцените вашу готовность к действиям:"
+      buttons:
+        - text: "🔥 Готов(а) принимать экстренные меры"
+          value: "ready_now"
+          next_step: "significance_quiz"
+        - text: "🤔 Собираю информацию и консультации"
+          value: "thinking"
+          next_step: "significance_quiz"
+        - text: "📋 Делаю первые шаги в поиске решений"
+          value: "just_info"
+          next_step: "significance_quiz"
+
+    - id: "significance_quiz"
+      type: "question"
+      content: "Насколько важна для вас эта проблема?"
+      buttons:
+        - text: "⚡ Высокая - затрагивает карьеру и службу"
+          value: "critical"
+          next_step: "paid_value"
+        - text: "⏳ Средняя - нужно устранить моменты"
+          value: "important"
+          next_step: "paid_value"
+        - text: "📌 Низкая - само разрешится"
+          value: "normal"
+          next_step: "paid_value"
+
+    - id: "paid_value"
+      type: "text"
+      content: |
+        Мы используем <b>уникальные методики и инструменты</b>, позволяющие качественно и глубоко исследовать каждую деталь вашего дела. Эксперты с многолетней практикой лично консультируют вас, обеспечивая индивидуальный подход.
+
+        💡 Если после консультации вы закажете любую нашу услугу - консультация становится бесплатной. Вы оплачиваете только работу по договору.
+      next_step: "success_cases"
+
+    - id: "success_cases"
+      type: "question"
+      content: "Знаете ли вы, что наши юристы уже выиграли тысячи дел? Хотите увидеть пример?"
+      buttons:
+        - text: "✅ Да, покажите"
+          value: "show_case"
+          next_step: "case_display"
+        - text: "➡ Перейти к записи"
+          value: "skip_case"
+          next_step: "contact_collection"
+
+    - id: "case_display"
+      type: "text"
+      content: |
+        📌 <b>Кейс: Восстановление на службе после незаконного увольнения</b>
+
+        Военнослужащий-контрактник был уволен без соблюдения процедуры. Мы подготовили жалобу в военную прокуратуру и представляли интересы в военном суде.
+
+        ✅ Полное восстановление в должности
+        ✅ Выплата компенсации за вынужденный прогул
+        ✅ Срок: 3 месяца
+
+        Мы готовы помочь и вам! 💪
+      next_step: "contact_collection"
+
+    - id: "contact_collection"
+      type: "contact"
+      content: |
+        📝 Для записи на консультацию оставьте ваши контактные данные. Мы оперативно свяжемся с вами.
+
+        Нажмите кнопку «📱 Поделиться контактом» или отправьте:
+        <b>Имя Фамилия, +7XXXXXXXXXX</b>
+      next_step: "confirmation"
+
+    - id: "confirmation"
+      type: "end"
+      content: |
+        ✅ <b>Спасибо! Ваша заявка принята!</b>
+
+        📋 Направление: Военный юрист
+        💰 Стоимость консультации: 5 000 ₽
+        👤 Ваши контакты сохранены
+
+        Менеджер свяжется с вами для подтверждения записи и назначения времени.
+
+        🔒 Гарантируем конфиденциальность.
+
+        /start - Новая консультация
+      final_step: true
