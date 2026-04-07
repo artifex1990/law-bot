@@ -7,6 +7,7 @@ import pytest
 
 from src.core.algorithm_engine import Step
 from src.core.conversation_manager import (
+    MSG_CANCEL_EMPTY,
     MSG_DELETE_CANCEL,
     MSG_DELETE_CONFIRM,
     MSG_DELETE_DONE,
@@ -61,6 +62,7 @@ def test_context_initial_state():
     assert ctx.created_at is not None
     assert ctx.skip_contacts is False
     assert ctx.awaiting_delete_confirm is False
+    assert ctx.step_stack == []
 
 
 # ---- parse_contacts ----
@@ -176,10 +178,13 @@ async def test_process_message_help(mock_messenger):
 
 @pytest.mark.asyncio
 async def test_process_message_cancel(mock_messenger):
+    """/cancel без истории шагов — подсказка, без сброса диалога."""
     mgr = ConversationManager(mock_messenger)
     msg = _make_message("/cancel")
     await mgr.process_message(msg)
     mock_messenger.send_message.assert_called_once()
+    sent = mock_messenger.send_message.call_args[0][0]
+    assert sent.content == MSG_CANCEL_EMPTY
 
 
 @pytest.mark.asyncio

@@ -20,11 +20,11 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column(
+    op.add_column(  # type: ignore[attr-defined]
         "users",
         sa.Column("privacy_consent_at", sa.DateTime(), nullable=True),
     )
 
 
 def downgrade() -> None:
-    op.drop_column("users", "privacy_consent_at")
+    op.drop_column("users", "privacy_consent_at")  # type: ignore[attr-defined]

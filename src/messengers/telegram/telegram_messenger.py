@@ -336,7 +336,7 @@ class TelegramMessenger(AbstractMessenger):
             ),
             BotCommand(
                 command="cancel",
-                description="Отменить текущее действие",
+                description="Отменить последний ответ (шаг назад)",
             ),
             BotCommand(
                 command="deletedata",

@@ -26,7 +26,10 @@ from src.services.consultation_service import (
 )
 from src.services.outbound_sync import schedule_push_consultation
 
-MSG_CANCEL = "Операция отменена. Напишите /start чтобы начать заново."
+MSG_CANCEL_EMPTY = (
+    "Сейчас нечего отменить — вы ещё не выбирали шаг в этом диалоге.\n\n"
+    "Продолжайте ответ или нажмите <b>/restart</b>, чтобы начать сначала."
+)
 MSG_ERROR = "Произошла ошибка. Напишите /start чтобы начать заново."
 MSG_CONTACT_FAIL = (
     "Не удалось распознать контакт.\n\n"
@@ -62,7 +65,7 @@ MSG_UNKNOWN_CMD = (
     "/start — Начать консультацию\n"
     "/restart — Начать заново\n"
     "/help — Показать справку\n"
-    "/cancel — Отменить текущее действие\n"
+    "/cancel — Отменить последний ответ (шаг назад)\n"
     "/deletedata — Удалить мои данные"
 )
 
@@ -71,9 +74,10 @@ HELP_TEXT = (
     "/start — Начать консультацию\n"
     "/restart — Начать заново\n"
     "/help — Показать справку\n"
-    "/cancel — Отменить текущее действие\n"
+    "/cancel — Отменить последний ответ (шаг назад)\n"
     "/deletedata — Удалить мои данные\n\n"
-    "Нажимайте на кнопки для навигации."
+    "Нажимайте на кнопки для навигации.\n"
+    "<b>/cancel</b> возвращает к предыдущему вопросу (если он есть)."
 )
 
 PHONE_RE = re.compile(r"^\+?[\d\s\-\(\)]{10,}$")
@@ -101,6 +105,8 @@ class ConversationContext:
         self.created_at = datetime.now(tz=timezone.utc)
         self.skip_contacts: bool = False
         self.awaiting_delete_confirm: bool = False
+        # (step_id, direction) — шаг, на котором были до последнего ответа
+        self.step_stack: list[tuple[str, str | None]] = []
 
     def set_step(self, step: str):
         self.current_step = step
@@ -172,6 +178,7 @@ class ConversationManager:
         """Команда /start"""
         context = self._get_or_create_context(message)
         context.data.clear()
+        context.step_stack.clear()
         context.direction = None
         context.current_step = None
         context.awaiting_delete_confirm = False
@@ -225,22 +232,39 @@ class ConversationManager:
         await self._handle_start(message)
 
     async def _handle_cancel(self, message: IncomingMessage):
-        """Команда /cancel"""
+        """Команда /cancel — откат к предыдущему шагу (если был ответ)."""
         context = self._get_or_create_context(message)
+        if not context.step_stack:
+            await self.messenger.send_message(
+                OutgoingMessage(
+                    chat_id=message.chat_id,
+                    content=MSG_CANCEL_EMPTY,
+                ),
+            )
+            return
+
+        step_id, saved_dir = context.step_stack.pop()
+        context.direction = saved_dir
+        self._trim_context_after_undo(context, step_id)
+
         if context.chat_db_id:
             async with async_session_factory() as session:
                 svc = ConsultationService(session)
-                await svc.mark_chat_abandoned(context.chat_db_id)
+                if step_id == "consent" and context.user_db_id:
+                    await svc.clear_privacy_consent(context.user_db_id)
+                await svc.update_chat_direction(
+                    context.chat_db_id,
+                    saved_dir,
+                )
                 await session.commit()
 
-        key = self._context_key(message)
-        self.active_conversations.pop(key, None)
-
-        await self.messenger.send_message(
-            OutgoingMessage(
-                chat_id=message.chat_id,
-                content=MSG_CANCEL,
-            )
+        algo = self.algorithm_loader.load_algorithm(saved_dir or "main")
+        await self._go_to_step(
+            context,
+            message,
+            algo,
+            step_id,
+            chain_auto=True,
         )
 
     async def _handle_help(self, message: IncomingMessage):
@@ -480,6 +504,7 @@ class ConversationManager:
                         svc = ConsultationService(session)
                         await svc.set_privacy_consent(context.user_db_id)
                         await session.commit()
+                self._push_step_undo(context, step.id, context.direction)
                 await self._go_to_step(context, message, algo, next_id)
             else:
                 await self._send_choose_button(message, step)
@@ -489,6 +514,7 @@ class ConversationManager:
 
         elif step.type in ("text", "photo", "media"):
             if step.next_step:
+                self._push_step_undo(context, step.id, context.direction)
                 await self._go_to_step(
                     context,
                     message,
@@ -498,6 +524,7 @@ class ConversationManager:
 
         else:
             if step.next_step:
+                self._push_step_undo(context, step.id, context.direction)
                 await self._go_to_step(
                     context,
                     message,
@@ -528,6 +555,9 @@ class ConversationManager:
             if next_step != "load_direction":
                 break
 
+            self._push_step_undo(
+                context, "direction_selection", context.direction
+            )
             context.direction = message.content
             context.update_data("direction", message.content)
 
@@ -567,6 +597,7 @@ class ConversationManager:
         """Обработка контактных данных."""
         if context.skip_contacts:
             next_id = current_step.next_step or "confirmation"
+            self._push_step_undo(context, current_step.id, context.direction)
             await self._go_to_step(context, message, algorithm, next_id)
             return
 
@@ -642,6 +673,7 @@ class ConversationManager:
             )
         )
         next_id = current_step.next_step or "confirmation"
+        self._push_step_undo(context, current_step.id, context.direction)
         await self._go_to_step(context, message, algorithm, next_id)
 
     # ---------------------------------------------------
@@ -654,6 +686,8 @@ class ConversationManager:
         message: IncomingMessage,
         algorithm,
         step_id: str,
+        *,
+        chain_auto: bool = True,
     ):
         """Переход к шагу"""
         if step_id == "contact_collection" and context.skip_contacts:
@@ -661,7 +695,13 @@ class ConversationManager:
             next_id = "confirmation"
             if step and step.next_step:
                 next_id = step.next_step
-            await self._go_to_step(context, message, algorithm, next_id)
+            await self._go_to_step(
+                context,
+                message,
+                algorithm,
+                next_id,
+                chain_auto=chain_auto,
+            )
             return
 
         step = algorithm.get_step(step_id)
@@ -680,13 +720,36 @@ class ConversationManager:
             await self._finalize_chat(context, message)
             return
 
-        if step.type in ("text", "photo", "media") and step.next_step:
+        if (
+            chain_auto
+            and step.type in ("text", "photo", "media")
+            and step.next_step
+        ):
             await self._go_to_step(
                 context,
                 message,
                 algorithm,
                 step.next_step,
+                chain_auto=chain_auto,
             )
+
+    @staticmethod
+    def _push_step_undo(
+        context: ConversationContext,
+        step_id: str | None,
+        direction: str | None,
+    ) -> None:
+        if step_id:
+            context.step_stack.append((step_id, direction))
+
+    @staticmethod
+    def _trim_context_after_undo(
+        context: ConversationContext,
+        step_id: str,
+    ) -> None:
+        if step_id in ("consent", "direction_selection"):
+            context.data.pop("direction", None)
+            context.data.pop("is_paid", None)
 
     async def _finalize_chat(
         self,
