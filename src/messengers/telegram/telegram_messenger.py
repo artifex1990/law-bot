@@ -14,6 +14,7 @@ from aiogram.exceptions import (
 from aiogram.filters import Command
 from aiogram.types import (
     BotCommand,
+    BotCommandScopeChat,
     BotCommandScopeAllPrivateChats,
     CallbackQuery,
     FSInputFile,
@@ -321,7 +322,7 @@ class TelegramMessenger(AbstractMessenger):
 
     async def _set_bot_commands(self) -> None:
         """Установить меню команд бота."""
-        commands = [
+        user_commands = [
             BotCommand(
                 command="start",
                 description="Начать консультацию",
@@ -343,10 +344,47 @@ class TelegramMessenger(AbstractMessenger):
                 description="Удалить мои данные",
             ),
         ]
+
+        default_scope = None
+        private_scope = BotCommandScopeAllPrivateChats()
+
+        for language_code in (None, "ru"):
+            await self.bot.delete_my_commands(
+                scope=default_scope, language_code=language_code
+            )
+            await self.bot.delete_my_commands(
+                scope=private_scope, language_code=language_code
+            )
+
         await self.bot.set_my_commands(
-            commands=commands,
-            scope=BotCommandScopeAllPrivateChats(),
+            commands=user_commands,
+            scope=private_scope,
         )
+        await self.bot.set_my_commands(
+            commands=user_commands,
+            scope=private_scope,
+            language_code="ru",
+        )
+        # Зафиксировать базовое меню в default scope, чтобы не подтягивались
+        # старые команды из предыдущих деплоев.
+        await self.bot.set_my_commands(commands=user_commands)
+        await self.bot.set_my_commands(
+            commands=user_commands,
+            language_code="ru",
+        )
+
+        if settings.ADMIN_IDS:
+            for admin_id in settings.ADMIN_IDS:
+                try:
+                    scope = BotCommandScopeChat(chat_id=int(admin_id))
+                    for language_code in (None, "ru"):
+                        await self.bot.delete_my_commands(
+                            scope=scope, language_code=language_code
+                        )
+                except ValueError:
+                    logger.warning(
+                        f"Invalid ADMIN_IDS value for Telegram menu: {admin_id}"
+                    )
 
     async def stop(self):
         """Остановка бота"""

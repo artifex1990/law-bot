@@ -65,7 +65,8 @@ async def main():
         mx = MaxMessenger()
         messengers.append(mx)
         followup_services.append(FollowupService(mx))
-        logger.info("MAX bot enabled")
+        mx_mode = "webhook" if settings.MAX_USE_WEBHOOK else "long polling"
+        logger.info(f"MAX bot enabled ({mx_mode})")
 
     if not messengers and not settings.API_ENABLED:
         logger.error(

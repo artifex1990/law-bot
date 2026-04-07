@@ -44,6 +44,18 @@ class Settings:
 
     # MAX Messenger (опционально)
     MAX_BOT_TOKEN: str = os.getenv("MAX_BOT_TOKEN", "")
+    MAX_USE_WEBHOOK = _flag("MAX_USE_WEBHOOK")
+    # Публичный HTTPS URL для subscribe_webhook (если без пути — добавится MAX_WEBHOOK_PATH)
+    MAX_WEBHOOK_URL: str = os.getenv("MAX_WEBHOOK_URL", "")
+    MAX_WEBHOOK_PATH: str = os.getenv("MAX_WEBHOOK_PATH", "/max/webhook")
+    # Секрет в заголовке X-Max-Bot-Api-Secret (должен совпадать с subscribe_webhook)
+    MAX_WEBHOOK_SECRET: str = os.getenv("MAX_WEBHOOK_SECRET", "")
+    # Локальный HTTP-сервер webhook (по умолчанию 8444, чтобы не конфликтовать с Telegram на 8443)
+    MAX_WEBHOOK_PORT: int = int(os.getenv("MAX_WEBHOOK_PORT", "8444"))
+    MAX_WEBHOOK_LISTEN_HOST: str = os.getenv(
+        "MAX_WEBHOOK_LISTEN_HOST",
+        os.getenv("WEBHOOK_LISTEN_HOST", "0.0.0.0"),
+    )
 
     # БД
     _default_db = (BASE_DIR / "legal_bot.db").as_posix()
@@ -176,6 +188,25 @@ class Settings:
         if path and path != "/":
             return raw.rstrip("/")
         wh_path = self.TELEGRAM_WEBHOOK_PATH.strip()
+        if not wh_path.startswith("/"):
+            wh_path = "/" + wh_path
+        origin = raw.rstrip("/")
+        return origin + wh_path
+
+    def build_max_webhook_url(self) -> str:
+        """Полный публичный URL для Bot.subscribe_webhook (MAX).
+
+        Если MAX_WEBHOOK_URL уже содержит путь (не только ``/``), используется как есть.
+        Иначе к origin добавляется MAX_WEBHOOK_PATH.
+        """
+        raw = self.MAX_WEBHOOK_URL.strip()
+        if not raw:
+            return ""
+        parsed = urlparse(raw)
+        path = (parsed.path or "").strip()
+        if path and path != "/":
+            return raw.rstrip("/")
+        wh_path = self.MAX_WEBHOOK_PATH.strip()
         if not wh_path.startswith("/"):
             wh_path = "/" + wh_path
         origin = raw.rstrip("/")

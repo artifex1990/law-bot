@@ -438,6 +438,68 @@ async def test_deletedata_confirm_yes_without_context_user_id(
     assert last.content == MSG_DELETE_DONE
 
 
+# ---- admin export ----
+
+
+@pytest.mark.asyncio
+async def test_admin_export_with_single_user_row(mock_messenger):
+    """Экспорт с 1 пользователем не должен считаться пустым."""
+    mgr = ConversationManager(mock_messenger)
+    msg = _make_message("/export")
+
+    mock_session = AsyncMock()
+    mock_session.__aenter__ = AsyncMock(return_value=mock_session)
+    mock_session.__aexit__ = AsyncMock(return_value=False)
+    mock_svc = AsyncMock()
+    mock_svc.export_users_csv.return_value = (
+        "Имя;Телефон;Email;Мессенджер;Дата\n"
+        "Павел; +79087826335;;telegram;07.04.2026 12:21"
+    )
+
+    with (
+        patch(
+            "src.core.conversation_manager.async_session_factory",
+            return_value=mock_session,
+        ),
+        patch(
+            "src.core.conversation_manager.AdminService",
+            return_value=mock_svc,
+        ),
+    ):
+        await mgr._admin_export(msg)
+
+    sent = mock_messenger.send_message.call_args[0][0]
+    assert "Нет данных для экспорта." not in sent.content
+    assert "Экспорт контактов" in sent.content
+
+
+@pytest.mark.asyncio
+async def test_admin_export_empty_returns_no_data(mock_messenger):
+    mgr = ConversationManager(mock_messenger)
+    msg = _make_message("/export")
+
+    mock_session = AsyncMock()
+    mock_session.__aenter__ = AsyncMock(return_value=mock_session)
+    mock_session.__aexit__ = AsyncMock(return_value=False)
+    mock_svc = AsyncMock()
+    mock_svc.export_users_csv.return_value = "Имя;Телефон;Email;Мессенджер;Дата"
+
+    with (
+        patch(
+            "src.core.conversation_manager.async_session_factory",
+            return_value=mock_session,
+        ),
+        patch(
+            "src.core.conversation_manager.AdminService",
+            return_value=mock_svc,
+        ),
+    ):
+        await mgr._admin_export(msg)
+
+    sent = mock_messenger.send_message.call_args[0][0]
+    assert sent.content == "Нет данных для экспорта."
+
+
 # ---- _find_next_step ----
 
 
