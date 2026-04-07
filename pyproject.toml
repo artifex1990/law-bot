@@ -21,7 +21,7 @@ aiohttp = "^3.11.0"
 loguru = "^0.7.2"
 maxapi = "^0.9.0"
 fastapi = "^0.115.0"
-uvicorn = {extras = ["standard"], version = "^0.32.0"}
+uvicorn = {extras = ["standard"], version = "^0.44.0"}
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.8.0"
