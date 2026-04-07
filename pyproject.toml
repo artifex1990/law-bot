@@ -20,7 +20,7 @@ pyyaml = "^6.0.2"
 aiohttp = "^3.11.0"
 loguru = "^0.7.2"
 maxapi = "^0.9.0"
-fastapi = "^0.115.0"
+fastapi = "^0.135.3"
 uvicorn = {extras = ["standard"], version = "^0.32.0"}
 
 [tool.poetry.group.dev.dependencies]
