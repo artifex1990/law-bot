@@ -1,0 +1,116 @@
+algorithm:
+  name: "Медицинский юрист — платная консультация"
+  direction: "medical"
+  version: "2.0"
+  is_paid: true
+  price: 5000
+
+  steps:
+    - id: "greeting"
+      type: "text"
+      content: |
+        Здравствуйте! Я <b>Алексей</b>, ваш помощник по медицинским юридическим вопросам.
+
+        Мы понимаем, что ситуации, связанные со здоровьем, требуют особого подхода. Наша задача — защитить ваши права и добиться справедливости.
+      next_step: "problem_quiz"
+
+    - id: "problem_quiz"
+      type: "question"
+      content: "Связана ли ваша ситуация с медициной?"
+      buttons:
+        - text: "😤 Некачественные медуслуги"
+          value: "bad_service"
+          next_step: "readiness_quiz"
+        - text: "⚕ Медицинская ошибка / неправильное лечение"
+          value: "medical_error"
+          next_step: "readiness_quiz"
+        - text: "💊 Осложнения после операции / лекарств"
+          value: "complications"
+          next_step: "readiness_quiz"
+        - text: "🩺 Травмы при диагностике / терапии"
+          value: "injury"
+          next_step: "readiness_quiz"
+
+    - id: "readiness_quiz"
+      type: "question"
+      content: "Оцените вашу готовность к действиям:"
+      buttons:
+        - text: "🔥 Готов(а) начать разбирательство"
+          value: "ready_now"
+          next_step: "significance_quiz"
+        - text: "🤔 Собираюсь посоветоваться"
+          value: "thinking"
+          next_step: "significance_quiz"
+        - text: "📋 Пока наблюдаю за ситуацией"
+          value: "just_info"
+          next_step: "significance_quiz"
+
+    - id: "significance_quiz"
+      type: "question"
+      content: "Насколько важна для вас эта проблема?"
+      buttons:
+        - text: "⚡ Критично — связано со здоровьем"
+          value: "critical"
+          next_step: "paid_value"
+        - text: "⏳ Средняя озабоченность"
+          value: "important"
+          next_step: "paid_value"
+        - text: "📌 Не критично"
+          value: "normal"
+          next_step: "paid_value"
+
+    - id: "paid_value"
+      type: "text"
+      content: |
+        Наши медицинские юристы обладают <b>уникальным опытом</b> работы с медицинскими делами. Мы глубоко разбираемся в медицинском законодательстве и имеем экспертов-рецензентов.
+
+        💡 Если после консультации вы закажете услугу — консультация бесплатна.
+      next_step: "success_cases"
+
+    - id: "success_cases"
+      type: "question"
+      content: "Хотите увидеть пример успешного дела?"
+      buttons:
+        - text: "✅ Да, покажите"
+          value: "show_case"
+          next_step: "case_display"
+        - text: "➡ Перейти к записи"
+          value: "skip_case"
+          next_step: "contact_collection"
+
+    - id: "case_display"
+      type: "text"
+      content: |
+        📌 <b>Кейс: Компенсация за врачебную ошибку</b>
+
+        Пациенту поставили неправильный диагноз, что привело к осложнениям. Клиника отказывалась признавать вину.
+
+        ✅ Проведена независимая медицинская экспертиза
+        ✅ Доказана вина клиники в суде
+        ✅ Взыскана компенсация 1,8 млн руб.
+        ✅ Срок: 6 месяцев
+
+        Мы готовы защитить и ваши права! 💪
+      next_step: "contact_collection"
+
+    - id: "contact_collection"
+      type: "contact"
+      content: |
+        📝 Для записи на консультацию оставьте контактные данные.
+
+        Нажмите «📱 Поделиться контактом» или отправьте:
+        <b>Имя Фамилия, +7XXXXXXXXXX</b>
+      next_step: "confirmation"
+
+    - id: "confirmation"
+      type: "end"
+      content: |
+        ✅ <b>Заявка принята!</b>
+
+        📋 Направление: Медицинское право
+        💰 Стоимость консультации: 5 000 ₽
+
+        Менеджер свяжется с вами в ближайшее время.
+
+        /start — Новая консультация
+      final_step: true

@@ -4,6 +4,34 @@ from typing import Any
 
 from loguru import logger
 
+SUPPORTED_MEDIA_TYPES = (
+    "photo",
+    "video_note",
+    "video",
+    "animation",
+    "sticker",
+)
+
+
+class MediaAttachment:
+    """Медиа-вложение для шага алгоритма.
+
+    Поддерживаемые типы:
+      - photo       — обычная фотография
+      - video_note  — кружочек (круглое видео)
+      - video       — обычное видео
+      - animation   — GIF-анимация
+      - sticker     — стикер
+    """
+
+    def __init__(self, media_dict: dict):
+        self.type: str = media_dict.get("type", "photo")
+        self.file: str = media_dict.get("file", "")
+        self.caption: str | None = media_dict.get("caption")
+
+    def __repr__(self) -> str:
+        return f"MediaAttachment({self.type}:{self.file})"
+
 
 class Step:
     """Шаг алгоритма"""
@@ -15,14 +43,20 @@ class Step:
         self.content = step_dict.get("content", "")
         self.buttons = step_dict.get("buttons", [])
         self.fields = step_dict.get("fields", [])
+        self.photo = step_dict.get("photo")
         self.next_step = step_dict.get("next_step")
         self.final_step = step_dict.get("final_step", False)
+
+        self.media: list[MediaAttachment] = []
+        for m in step_dict.get("media", []):
+            self.media.append(MediaAttachment(m))
+
         self._raw = step_dict
 
     def get(self, key: str, default=None) -> Any:
         return self._raw.get(key, default)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Step({self.id}:{self.type})"
 
 

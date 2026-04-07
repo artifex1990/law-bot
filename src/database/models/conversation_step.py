@@ -1,6 +1,6 @@
 """Модель шага диалога"""
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String
@@ -10,7 +10,7 @@ from src.database.base import Base
 
 
 def _utcnow() -> datetime:
-    return datetime.now(UTC)
+    return datetime.now(timezone.utc)
 
 
 class ConversationStep(Base):

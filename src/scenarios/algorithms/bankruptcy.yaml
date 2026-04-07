@@ -1,137 +1,127 @@
-# Алгоритм: Банкротство физических лиц (бесплатная консультация)
 algorithm:
-  name: "Консультация по банкротству физических лиц"
+  name: "Банкротство физических лиц — бесплатная консультация"
   direction: "bankruptcy"
-  version: "1.0"
-  description: "Алгоритм сбора информации для консультации по банкротству"
+  version: "2.0"
   is_paid: false
-  
+
   steps:
     - id: "greeting"
       type: "text"
-      title: "Приветствие"
       content: |
-        👋 Здравствуйте! Я помогу вам разобраться с вопросом о банкротстве физических лиц.
-        
-        <i>Консультация бесплатная.</i>
-      next_step: "problem_status"
-      
-    - id: "problem_status"
+        Добрый день! Меня зовут <b>Антон</b>, я здесь, чтобы помочь вам найти ответы на волнующие вопросы.
+
+        Банкротство — сложная ситуация, но она разрешима. Мы видим сотни таких случаев ежегодно и находим правильные решения. Ваши финансы, будущее и свобода зависят от правильных действий.
+
+        Давайте разберёмся в вашей ситуации 👇
+      next_step: "problem_quiz"
+
+    - id: "problem_quiz"
       type: "question"
-      title: "Статус проблемы"
-      content: "У вас уже есть проблема с долгами, или вы хотите получить консультацию?"
+      content: "Какая проблема вас беспокоит?"
       buttons:
-        - text: "Да, есть проблема"
-          value: "has_problem"
-          next_step: "debt_amount"
-        - text: "Только консультация"
-          value: "consultation_only"
-          next_step: "debt_amount"
-        - text: "◀ Назад"
-          value: "back"
-          next_step: "greeting"
-      
-    - id: "debt_amount"
+        - text: "💳 Крупная задолженность по кредитам"
+          value: "debt_credits"
+          next_step: "readiness_quiz"
+        - text: "🏠 Не могу погасить ипотеку"
+          value: "debt_mortgage"
+          next_step: "readiness_quiz"
+        - text: "🔒 Заблокированы счета и аресты"
+          value: "blocked_accounts"
+          next_step: "readiness_quiz"
+        - text: "📋 Хочу признать себя банкротом"
+          value: "voluntary_bankruptcy"
+          next_step: "readiness_quiz"
+
+    - id: "readiness_quiz"
       type: "question"
-      title: "Размер долга"
-      content: "Какая примерная сумма вашего долга?"
+      content: "Оцените вашу готовность к действиям:"
       buttons:
-        - text: "Менее 100 000 ₽"
-          value: "small"
-          next_step: "creditor_count"
-        - text: "100 000 - 1 000 000 ₽"
-          value: "medium"
-          next_step: "creditor_count"
-        - text: "Более 1 000 000 ₽"
-          value: "large"
-          next_step: "creditor_count"
-        - text: "◀ Назад"
-          value: "back"
-          next_step: "problem_status"
-      
-    - id: "creditor_count"
+        - text: "🔥 Готов(а) действовать немедленно"
+          value: "ready_now"
+          next_step: "significance_quiz"
+        - text: "🤔 Размышляю и оцениваю ситуацию"
+          value: "thinking"
+          next_step: "significance_quiz"
+        - text: "📋 Только собираю информацию"
+          value: "just_info"
+          next_step: "significance_quiz"
+
+    - id: "significance_quiz"
       type: "question"
-      title: "Количество кредиторов"
-      content: "Сколько у вас кредиторов?"
+      content: "Насколько важна для вас эта проблема?"
       buttons:
-        - text: "1 кредитор"
-          value: "one"
-          next_step: "urgency"
-        - text: "2-5 кредиторов"
-          value: "few"
-          next_step: "urgency"
-        - text: "Более 5 кредиторов"
-          value: "many"
-          next_step: "urgency"
-        - text: "◀ Назад"
-          value: "back"
-          next_step: "debt_amount"
-      
-    - id: "urgency"
+        - text: "⚡ Критично — нужно решить немедленно"
+          value: "critical"
+          next_step: "free_offer"
+        - text: "⏳ Важно, но терпит некоторое время"
+          value: "important"
+          next_step: "free_offer"
+        - text: "📌 Обычная ситуация, не критично"
+          value: "normal"
+          next_step: "free_offer"
+
+    - id: "free_offer"
+      type: "text"
+      content: |
+        Поскольку ваша ситуация требует особого подхода, мы проводим <b>уникальную акцию — бесплатную консультацию по банкротству</b>. Такой шанс появляется редко, воспользуйтесь им!
+
+        ✅ Консультация полностью бесплатна
+        ✅ Индивидуальный разбор вашей ситуации
+        ✅ Конкретный план действий
+
+        💡 Если после консультации вы закажете любую нашу услугу (полное представительство, подготовка документов + сопровождение или только документ) — консультация остаётся бесплатной. Вы оплачиваете только работу по договору.
+      next_step: "success_cases"
+
+    - id: "success_cases"
       type: "question"
-      title: "Срочность"
-      content: "Как срочно вам нужна консультация?"
+      content: "Хотите увидеть, как мы помогли десяткам людей вернуться к нормальной жизни?"
       buttons:
-        - text: "Срочно (в течение дня)"
-          value: "urgent"
+        - text: "✅ Да, покажите кейс"
+          value: "show_case"
+          next_step: "case_display"
+        - text: "➡ Перейти к записи"
+          value: "skip_case"
           next_step: "contact_collection"
-        - text: "В течение недели"
-          value: "week"
-          next_step: "contact_collection"
-        - text: "Неспешно"
-          value: "not_urgent"
-          next_step: "contact_collection"
-        - text: "◀ Назад"
-          value: "back"
-          next_step: "creditor_count"
-      
+
+    - id: "case_display"
+      type: "text"
+      content: |
+        📌 <b>Кейс: Списание долга в 3,2 млн рублей</b>
+
+        Клиент обратился с долгами перед 4 банками. Коллекторы звонили ежедневно, счета были заблокированы.
+
+        ✅ Мы провели анализ ситуации
+        ✅ Подготовили документы для суда
+        ✅ Представляли интересы клиента в арбитражном суде
+        ✅ Итог: полное списание долга за 8 месяцев
+
+        Клиент вернулся к нормальной жизни без долгов. 🎉
+
+        Мы готовы помочь и вам!
+      next_step: "contact_collection"
+
     - id: "contact_collection"
       type: "contact"
-      title: "Контактные данные"
       content: |
-        📝 Пожалуйста, укажите ваши контактные данные для связи.
-        
-        Отправьте сообщение в формате:
-        <b>Имя Фамилия, телефон, email</b>
-        
-        Пример: <i>Иван Иванов, +79991234567, ivan@mail.ru</i>
-      fields:
-        - name: "full_name"
-          type: "text"
-          label: "Полное имя"
-          required: true
-        - name: "phone"
-          type: "phone"
-          label: "Телефон"
-          required: true
-        - name: "email"
-          type: "email"
-          label: "Email"
-          required: false
+        📝 Чтобы мы могли помочь вам быстрее, оставьте, пожалуйста, ваши контактные данные. Мы свяжемся с вами в ближайшее время.
+
+        Нажмите кнопку «📱 Поделиться контактом» или отправьте сообщение в формате:
+        <b>Имя Фамилия, +7XXXXXXXXXX</b>
       next_step: "confirmation"
-      
+
     - id: "confirmation"
-      type: "summary"
-      title: "Подтверждение"
-      content: |
-        ✅ <b>Спасибо! Ваша заявка принята.</b>
-        
-        Наш юрист свяжется с вами в ближайшее время.
-        
-        📋 Направление: Банкротство физлиц
-        👤 Контакты сохранены
-      next_step: "completed"
-      
-    - id: "completed"
       type: "end"
-      title: "Завершено"
       content: |
-        Спасибо за обращение! 🙏
-        
-        📋 Ваша заявка зарегистрирована
-        📞 Мы вам перезвоним
-        
-        <b>Команды:</b>
-        /start — Начать заново
+        ✅ <b>Спасибо! Ваша заявка на бесплатную консультацию принята!</b>
+
+        📋 Направление: Банкротство физических лиц
+        💰 Стоимость консультации: <b>БЕСПЛАТНО</b>
+        👤 Ваши контакты сохранены
+
+        Наш юрист свяжется с вами в ближайшее время для назначения удобного времени консультации.
+
+        🔒 Гарантируем полную конфиденциальность ваших данных.
+
+        /start — Новая консультация
         /help — Справка
       final_step: true

@@ -1,35 +1,52 @@
-name: Lint & Format Check
+name: CI — Lint, Types & Tests
 
 on:
   push:
-    branches: [main, master, develop]
+    branches: [master, dev, release]
   pull_request:
-    branches: [main, master, develop]
+    branches: [master, dev, release]
 
 jobs:
   lint:
-    name: Ruff + mypy
+    name: Ruff lint + format
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
+      - run: pip install ruff
+      - run: ruff format --check src/ tests/
+      - run: ruff check src/ tests/
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install ruff mypy sqlalchemy[mypy] types-PyYAML
+  typecheck:
+    name: mypy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          pip install mypy sqlalchemy[mypy] types-PyYAML
           pip install -r requirements.txt
+      - run: mypy src/ --config-file pyproject.toml
 
-      - name: Ruff format check
-        run: ruff format --check src/
-
-      - name: Ruff lint
-        run: ruff check src/
-
-      - name: mypy type check
-        run: mypy src/ --config-file pyproject.toml
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: "sqlite+aiosqlite:///:memory:"
+      TELEGRAM_BOT_TOKEN: ""
+      MAX_BOT_TOKEN: ""
+      BACKUP_ENABLED: "False"
+      DEBUG: "False"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio
+      - run: pytest tests/ -v --tb=short

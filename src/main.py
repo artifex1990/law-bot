@@ -13,23 +13,27 @@ from src.config.logging_config import setup_logging
 from src.config.settings import settings
 from src.database.base import init_db
 from src.services.backup_service import BackupService
+from src.services.followup_service import FollowupService
 
 
 async def run_messenger(messenger):
-    """Запуск одного мессенджера с корректной остановкой"""
+    """Запуск мессенджера с корректной остановкой."""
     try:
         await messenger.start()
     except Exception as e:
-        logger.error(f"Bot error ({messenger.messenger_type}): {e}")
+        mtype = messenger.messenger_type
+        logger.error(f"Bot error ({mtype}): {e}")
         raise
     finally:
         await messenger.stop()
 
 
 async def main():
-    """Главная функция запуска"""
+    """Главная функция запуска."""
     setup_logging(settings.LOG_LEVEL)
-    logger.info(f"Starting {settings.PROJECT_NAME} v{settings.VERSION}")
+    name = settings.PROJECT_NAME
+    ver = settings.VERSION
+    logger.info(f"Starting {name} v{ver}")
 
     try:
         await init_db()
@@ -38,46 +42,84 @@ async def main():
         logger.error(f"Database init failed: {e}")
         sys.exit(1)
 
-    # Бэкапы
     backup = BackupService()
     await backup.start()
 
-    # Мессенджеры
     messengers = []
+    followup_services: list[FollowupService] = []
 
     if settings.TELEGRAM_BOT_TOKEN:
-        from src.messengers.telegram import TelegramMessenger
+        from src.messengers.telegram import (
+            TelegramMessenger,
+        )
 
-        messengers.append(TelegramMessenger())
-        logger.info("Telegram bot enabled")
+        tg = TelegramMessenger()
+        messengers.append(tg)
+        followup_services.append(FollowupService(tg))
+        mode = "webhook" if settings.TELEGRAM_USE_WEBHOOK else "long polling"
+        logger.info(f"Telegram bot enabled ({mode})")
 
     if settings.MAX_BOT_TOKEN:
         from src.messengers.max import MaxMessenger
 
-        messengers.append(MaxMessenger())
+        mx = MaxMessenger()
+        messengers.append(mx)
+        followup_services.append(FollowupService(mx))
         logger.info("MAX bot enabled")
 
-    if not messengers:
+    if not messengers and not settings.API_ENABLED:
         logger.error(
-            "No bot tokens configured. Set TELEGRAM_BOT_TOKEN in .env or .env.local"
+            "No bot tokens configured. Set TELEGRAM_BOT_TOKEN in .env "
+            "or enable API_ENABLED=true for HTTP-only mode.",
         )
         sys.exit(1)
 
-    try:
+    for fs in followup_services:
+        await fs.start()
+
+    async def run_api_server():
+        import uvicorn
+
+        from src.api.app import app
+
+        config = uvicorn.Config(
+            app,
+            host=settings.API_HOST,
+            port=settings.API_PORT,
+            log_level=settings.LOG_LEVEL.lower(),
+        )
+        server = uvicorn.Server(config)
+        await server.serve()
+
+    tasks: list[asyncio.Task] = []
+    if settings.API_ENABLED:
+        logger.info(
+            f"Integration API http://{settings.API_HOST}:{settings.API_PORT} "
+            "(OpenAPI /docs)",
+        )
+        tasks.append(asyncio.create_task(run_api_server()))
+
+    if messengers:
         if len(messengers) == 1:
-            await run_messenger(messengers[0])
+            tasks.append(asyncio.create_task(run_messenger(messengers[0])))
         else:
-            tasks = [asyncio.create_task(run_messenger(m)) for m in messengers]
-            done, pending = await asyncio.wait(
-                tasks,
-                return_when=asyncio.FIRST_EXCEPTION,
-            )
-            for task in pending:
-                task.cancel()
-            for task in done:
-                if task.exception():
-                    logger.error(f"Messenger crashed: {task.exception()}")
+            for m in messengers:
+                tasks.append(asyncio.create_task(run_messenger(m)))
+
+    try:
+        done, pending = await asyncio.wait(
+            tasks,
+            return_when=asyncio.FIRST_EXCEPTION,
+        )
+        for task in pending:
+            task.cancel()
+        for task in done:
+            exc = task.exception()
+            if exc:
+                logger.error(f"Background task crashed: {exc}")
     finally:
+        for fs in followup_services:
+            await fs.stop()
         await backup.stop()
 
 
