@@ -6,14 +6,13 @@ import asyncio
 import re
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from loguru import logger
 from maxapi import Bot, Dispatcher, F
-from maxapi.types import (
-    BotStarted,
-    MessageCallback,
-    MessageCreated,
-)
+
+if TYPE_CHECKING:
+    from maxapi.types import BotStarted, MessageCallback, MessageCreated
 
 from src.config.settings import settings
 from src.core.conversation_manager import ConversationManager
@@ -23,6 +22,7 @@ from src.messengers.base import (
     MediaItem,
     OutgoingMessage,
 )
+from src.messengers.webhook_health import AiohttpMaxWebhookWithHealth
 
 MAX_RETRIES = 3
 RETRY_BASE_DELAY = 1.0
@@ -200,14 +200,14 @@ class MaxMessenger(AbstractMessenger):
             return None
         mode = parse_mode.lower()
         try:
-            from maxapi.enums.parse_mode import ParseMode as PM
+            from maxapi.enums.parse_mode import ParseMode
         except ImportError:
-            from maxapi.types import ParseMode as PM
+            from maxapi.types import ParseMode
 
         if mode == "html":
-            return PM.HTML
+            return ParseMode.HTML
         if mode == "markdown":
-            return PM.MARKDOWN
+            return ParseMode.MARKDOWN
         return None
 
     async def _send_with_retry(self, **kwargs):
@@ -222,8 +222,8 @@ class MaxMessenger(AbstractMessenger):
                     f"MAX send retry {attempt}/{MAX_RETRIES} in {delay}s: {e}"
                 )
                 await asyncio.sleep(delay)
-        if last_exc:
-            raise last_exc
+        assert last_exc is not None
+        raise last_exc
 
     def _inline_keyboard_attachment(
         self,
@@ -416,7 +416,9 @@ class MaxMessenger(AbstractMessenger):
             logger.info(
                 f"MAX webhook: public URL={public_url!r}, "
                 f"listen http://{settings.MAX_WEBHOOK_LISTEN_HOST}:"
-                f"{settings.MAX_WEBHOOK_PORT}{path}",
+                f"{settings.MAX_WEBHOOK_PORT}{path}; "
+                f"health http://{settings.MAX_WEBHOOK_LISTEN_HOST}:"
+                f"{settings.MAX_WEBHOOK_PORT}/health/live",
             )
             await self.dp.handle_webhook(
                 self.bot,
@@ -424,6 +426,7 @@ class MaxMessenger(AbstractMessenger):
                 port=settings.MAX_WEBHOOK_PORT,
                 path=path,
                 secret=secret,
+                webhook_type=AiohttpMaxWebhookWithHealth,
             )
             return
 

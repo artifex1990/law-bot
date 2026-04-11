@@ -10,6 +10,7 @@ from loguru import logger
 
 from src.config.settings import settings
 from src.database.base import async_session_factory
+from src.security.url_validation import is_safe_outbound_webhook_url
 from src.services.consultation_service import ConsultationService
 
 if TYPE_CHECKING:
@@ -63,6 +64,16 @@ async def push_consultation_to_remote(consultation_id: int) -> str:
     url = settings.OUTBOUND_WEBHOOK_URL.strip()
     if not url:
         return "no_url"
+    if not is_safe_outbound_webhook_url(
+        url,
+        allow_private=settings.OUTBOUND_WEBHOOK_ALLOW_PRIVATE_IPS,
+    ):
+        logger.error(
+            "Outbound webhook URL rejected (SSRF protection): "
+            "use HTTPS to a public host or set "
+            "OUTBOUND_WEBHOOK_ALLOW_PRIVATE_IPS=True only on trusted networks",
+        )
+        return "failed"
 
     async with async_session_factory() as session:
         svc = ConsultationService(session)
@@ -107,7 +118,16 @@ async def push_consultation_to_remote(consultation_id: int) -> str:
 
 def schedule_push_consultation(consultation_id: int) -> None:
     """Fire-and-forget: не блокирует завершение чата в боте."""
-    if not settings.OUTBOUND_WEBHOOK_URL.strip():
+    url = settings.OUTBOUND_WEBHOOK_URL.strip()
+    if not url:
+        return
+    if not is_safe_outbound_webhook_url(
+        url,
+        allow_private=settings.OUTBOUND_WEBHOOK_ALLOW_PRIVATE_IPS,
+    ):
+        logger.warning(
+            "schedule_push: OUTBOUND_WEBHOOK_URL failed SSRF check, skipped",
+        )
         return
 
     async def _run():

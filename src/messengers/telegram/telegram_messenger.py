@@ -14,8 +14,8 @@ from aiogram.exceptions import (
 from aiogram.filters import Command
 from aiogram.types import (
     BotCommand,
-    BotCommandScopeChat,
     BotCommandScopeAllPrivateChats,
+    BotCommandScopeChat,
     CallbackQuery,
     FSInputFile,
     InlineKeyboardButton,
@@ -40,7 +40,10 @@ from src.messengers.base import (
     MediaItem,
     OutgoingMessage,
 )
-from src.services.health_service import run_ready_checks
+from src.messengers.webhook_health import (
+    SERVICE_TELEGRAM_WEBHOOK,
+    register_aiohttp_webhook_health_routes,
+)
 
 MAX_RETRIES = 3
 RETRY_BASE_DELAY = 1.0
@@ -263,19 +266,7 @@ class TelegramMessenger(AbstractMessenger):
 
         app = web.Application()
 
-        async def _health_live(_request: web.Request) -> web.Response:
-            return web.json_response(
-                {"status": "ok", "service": "telegram_webhook"},
-            )
-
-        async def _health_ready(_request: web.Request) -> web.Response:
-            data = await run_ready_checks()
-            code = 200 if data["ready"] else 503
-            payload = {**data, "service": "telegram_webhook"}
-            return web.json_response(payload, status=code)
-
-        app.router.add_get("/health/live", _health_live)
-        app.router.add_get("/health/ready", _health_ready)
+        register_aiohttp_webhook_health_routes(app, SERVICE_TELEGRAM_WEBHOOK)
 
         handler = SimpleRequestHandler(
             dispatcher=self.dp,

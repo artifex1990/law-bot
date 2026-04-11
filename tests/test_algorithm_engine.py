@@ -208,6 +208,13 @@ def test_loader_missing_uses_template():
     assert algo.direction == "nonexistent_direction_xyz"
 
 
+def test_loader_rejects_unsafe_direction():
+    loader = AlgorithmLoader()
+    algo = loader.load_algorithm("../../../etc")
+    assert algo is not None
+    assert algo.direction == "main"
+
+
 def test_all_directions_loadable():
     """Ensure all 16 direction YAML files load."""
     loader = AlgorithmLoader()

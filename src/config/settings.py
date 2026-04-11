@@ -20,6 +20,14 @@ def _flag(key: str, default: str = "False") -> bool:
     return os.getenv(key, default).lower() in _TRUTHY
 
 
+def _flag_optional(key: str, default: bool) -> bool:
+    """Если переменная не задана — ``default``; иначе как булев флаг."""
+    raw = os.getenv(key, "").strip()
+    if raw == "":
+        return default
+    return raw.lower() in _TRUTHY
+
+
 class Settings:
     """Конфигурация приложения"""
 
@@ -27,6 +35,8 @@ class Settings:
     PROJECT_NAME = "Legal Consultation Bot"
     VERSION = "2.1.0"
     DEBUG = _flag("DEBUG")
+    # OpenAPI/Swagger: по умолчанию как DEBUG; в проде без явного True — доки скрыты
+    API_DOCS_ENABLED = _flag_optional("API_DOCS_ENABLED", DEBUG)
 
     # Telegram
     TELEGRAM_BOT_TOKEN: str = os.getenv("TELEGRAM_BOT_TOKEN", "")
@@ -83,6 +93,11 @@ class Settings:
     )
     ADMIN_IDS: ClassVar[set[str]] = {
         s.strip() for s in _admin_raw.split(",") if s.strip()
+    }
+    # Админы в MAX (user_id из MAX; через запятую). Отдельно от Telegram ADMIN_IDS
+    _max_admin_raw = os.getenv("MAX_ADMIN_IDS", "")
+    MAX_ADMIN_IDS: ClassVar[set[str]] = {
+        s.strip() for s in _max_admin_raw.split(",") if s.strip()
     }
 
     # Таймауты
@@ -173,6 +188,10 @@ class Settings:
     # Исходящий webhook: POST на URL при новой заявке (токен опционален)
     OUTBOUND_WEBHOOK_URL: str = os.getenv("OUTBOUND_WEBHOOK_URL", "")
     OUTBOUND_WEBHOOK_TOKEN: str = os.getenv("OUTBOUND_WEBHOOK_TOKEN", "")
+    # True — не фильтровать localhost/частные IP (только доверенная сеть)
+    OUTBOUND_WEBHOOK_ALLOW_PRIVATE_IPS = _flag(
+        "OUTBOUND_WEBHOOK_ALLOW_PRIVATE_IPS",
+    )
 
     def build_telegram_webhook_url(self) -> str:
         """Полный URL для Bot.set_webhook.

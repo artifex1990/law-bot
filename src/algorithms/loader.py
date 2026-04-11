@@ -1,5 +1,6 @@
 """Загрузчик алгоритмов из YAML файлов"""
 
+import re
 from pathlib import Path
 
 import yaml
@@ -9,6 +10,8 @@ from src.config.settings import settings
 from src.core.algorithm_engine import Algorithm
 
 _ALGO_DIR = Path(settings.BASE_DIR) / "src" / "scenarios" / "algorithms"
+# Имя файла направления: только безопасные символы (защита от path traversal)
+_SAFE_DIRECTION_RE = re.compile(r"^[a-z0-9_]{1,64}$")
 
 
 class AlgorithmLoader:
@@ -20,10 +23,22 @@ class AlgorithmLoader:
 
     def load_algorithm(self, direction: str) -> Algorithm:
         """Загрузить алгоритм по направлению"""
+        if not _SAFE_DIRECTION_RE.match(direction):
+            logger.warning(
+                f"Rejected unsafe algorithm direction: {direction!r}"
+            )
+            return self._load_template_algorithm("main")
+
         if direction in self.loaded_algorithms:
             return self.loaded_algorithms[direction]
 
-        algo_file = self.algorithms_path / f"{direction}.yaml"
+        algo_file = (self.algorithms_path / f"{direction}.yaml").resolve()
+        base = self.algorithms_path.resolve()
+        try:
+            algo_file.relative_to(base)
+        except ValueError:
+            logger.warning(f"Algorithm path outside allowed dir: {direction!r}")
+            return self._load_template_algorithm("main")
 
         if not algo_file.exists():
             logger.warning(f"Algorithm {direction} not found, using template")

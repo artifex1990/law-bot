@@ -1,3 +1,8 @@
+# Локальная разработка: Postgres + бот (см. Dockerfile ENTRYPOINT → scripts/docker-entrypoint.sh).
+# Продакшен: docker-compose.prod.yml. Имена контейнеров совпадают с prod — не поднимайте оба стека на одной машине без смены project name (-p).
+#
+# DATABASE_URL ниже переопределяет значение из .env — нужен PostgreSQL внутри compose.
+
 services:
   postgres:
     image: postgres:15-alpine
@@ -9,12 +14,13 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-legal_bot} -d ${DB_NAME:-legal_bot}"]
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
     networks:
       - bot_network
 
@@ -26,9 +32,13 @@ services:
         condition: service_healthy
     env_file:
       - .env
-      - .env.local
+      - path: .env.local
+        required: false
     environment:
       DATABASE_URL: postgresql+asyncpg://${DB_USER:-legal_bot}:${DB_PASSWORD:-legal_bot_pass}@postgres:5432/${DB_NAME:-legal_bot}
+    ports:
+      # API и health (если API_ENABLED=true); вебхуки при необходимости: 8443, 8444
+      - "127.0.0.1:8080:8080"
     volumes:
       - ./logs:/app/logs
       - ./backups:/app/backups

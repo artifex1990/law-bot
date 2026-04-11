@@ -310,6 +310,8 @@ class ConversationManager:
     # ---------------------------------------------------
 
     def _is_admin(self, message: IncomingMessage) -> bool:
+        if self.messenger.messenger_type == "max":
+            return message.user_id in settings.MAX_ADMIN_IDS
         return message.user_id in settings.ADMIN_IDS
 
     async def _handle_admin(

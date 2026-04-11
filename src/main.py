@@ -94,9 +94,20 @@ async def main():
 
     tasks: list[asyncio.Task] = []
     if settings.API_ENABLED:
+        if not settings.INTEGRATION_API_TOKEN.strip():
+            logger.warning(
+                "INTEGRATION_API_TOKEN is empty: integration API accepts "
+                "requests without auth. Set a strong token before exposing "
+                "the API beyond localhost.",
+            )
+        docs = (
+            "/docs"
+            if settings.API_DOCS_ENABLED
+            else "(disabled; set API_DOCS_ENABLED=True)"
+        )
         logger.info(
             f"Integration API http://{settings.API_HOST}:{settings.API_PORT} "
-            "(OpenAPI /docs)",
+            f"OpenAPI {docs}",
         )
         tasks.append(asyncio.create_task(run_api_server()))
 

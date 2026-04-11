@@ -57,12 +57,15 @@ class HealthLiveResponse(BaseModel):
 
 
 class HealthReadyResponse(BaseModel):
-    """Readiness: зависимости (БД) доступны."""
+    """Readiness: зависимости (БД, опционально бэкапы) доступны."""
 
     status: str = Field(description="ready | unready")
     ready: bool
     checks: dict[str, str] = Field(
-        description="Ключ - имя проверки, значение - ok или fail: …",
+        description=(
+            "Ключи: **database**, **backup** (disabled | ok | fail: …). "
+            "При включённых бэкапах readiness зависит и от БД, и от проверки бэкапов."
+        ),
     )
     version: str = Field(description="Версия приложения")
 

@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from src.config.settings import settings
 from src.core.algorithm_engine import Step
 from src.core.conversation_manager import (
     MSG_CANCEL_EMPTY,
@@ -498,6 +499,28 @@ async def test_admin_export_empty_returns_no_data(mock_messenger):
 
     sent = mock_messenger.send_message.call_args[0][0]
     assert sent.content == "Нет данных для экспорта."
+
+
+def test_is_admin_telegram_uses_admin_ids(mock_messenger):
+    mock_messenger.messenger_type = "telegram"
+    mgr = ConversationManager(mock_messenger)
+    msg = _make_message("/stats", user_id="tg-42")
+    with patch.object(settings, "ADMIN_IDS", {"tg-42"}):
+        assert mgr._is_admin(msg) is True
+    with patch.object(settings, "ADMIN_IDS", set()):
+        assert mgr._is_admin(msg) is False
+
+
+def test_is_admin_max_uses_max_admin_ids(mock_messenger):
+    mock_messenger.messenger_type = "max"
+    mgr = ConversationManager(mock_messenger)
+    msg = _make_message("/stats", user_id="max-99")
+    with patch.object(settings, "MAX_ADMIN_IDS", {"max-99"}):
+        assert mgr._is_admin(msg) is True
+    with patch.object(settings, "MAX_ADMIN_IDS", set()):
+        assert mgr._is_admin(msg) is False
+    with patch.object(settings, "ADMIN_IDS", {"max-99"}):
+        assert mgr._is_admin(msg) is False
 
 
 # ---- _find_next_step ----

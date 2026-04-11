@@ -43,8 +43,10 @@ async def health_live():
     response_model=HealthReadyResponse,
     summary="Readiness",
     description=(
-        "Проверка **БД** (`SELECT 1`). HTTP **503**, если БД недоступна "
-        "(Kubernetes readinessProbe)."
+        "Проверка **БД** (`SELECT 1`) и при **`BACKUP_ENABLED=True`** — "
+        "работоспособность бэкапов (локальная папка / конфиг FTP / S3). "
+        "HTTP **503**, если проверка не прошла (Kubernetes readinessProbe). "
+        "Детали в поле **`checks`** (`database`, `backup`)."
     ),
     responses={
         503: {"description": "БД или другая проверка не прошла"},
