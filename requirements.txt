@@ -27,10 +27,7 @@ maxapi>=0.9.0
 # S3 backups (опционально, нужен только при BACKUP_STORAGE_TYPE=s3)
 # boto3>=1.35.0
 
-# Dev / linting (опционально для разработки)
-# ruff>=0.8.0
-# mypy>=1.13.0
-# pre-commit>=4.0.0
+# Dev-инструменты вынесены в requirements-dev.txt (Docker ставит только этот файл).
 
-# Type stubs (для mypy/IDE)
+# Type stubs (для mypy/IDE; лёгкие, оставлены и для прод-сборок с проверкой типов в CI)
 types-PyYAML>=6.0.12

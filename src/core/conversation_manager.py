@@ -1,5 +1,6 @@
 """Менеджер диалогов - управление состояниями и шагами"""
 
+import asyncio
 import re
 from datetime import datetime, timezone
 from typing import Any
@@ -125,6 +126,8 @@ class ConversationManager:
         self.messenger = messenger
         self.algorithm_loader = AlgorithmLoader()
         self.active_conversations: dict[str, ConversationContext] = {}
+        self._dialog_locks: dict[str, asyncio.Lock] = {}
+        self._dialog_locks_guard = asyncio.Lock()
 
     def _context_key(self, message: IncomingMessage) -> str:
         return f"{message.user_id}_{message.chat_id}"
@@ -142,12 +145,27 @@ class ConversationManager:
             )
         return self.active_conversations[key]
 
+    async def _get_dialog_lock(self, key: str) -> asyncio.Lock:
+        """Один lock на диалог (user+chat), чтобы апдейты не шли параллельно."""
+        async with self._dialog_locks_guard:
+            lock = self._dialog_locks.get(key)
+            if lock is None:
+                lock = asyncio.Lock()
+                self._dialog_locks[key] = lock
+            return lock
+
     # ---------------------------------------------------
     # Message routing
     # ---------------------------------------------------
 
     async def process_message(self, message: IncomingMessage):
-        """Обработка входящего сообщения"""
+        """Обработка входящего сообщения (строго по одному на диалог)."""
+        key = self._context_key(message)
+        lock = await self._get_dialog_lock(key)
+        async with lock:
+            await self._route_incoming_message(message)
+
+    async def _route_incoming_message(self, message: IncomingMessage):
         preview = message.content[:50]
         logger.info(f"Message from {message.user_id}: {preview}...")
 
@@ -292,6 +310,8 @@ class ConversationManager:
     # ---------------------------------------------------
 
     def _is_admin(self, message: IncomingMessage) -> bool:
+        if self.messenger.messenger_type == "max":
+            return message.user_id in settings.MAX_ADMIN_IDS
         return message.user_id in settings.ADMIN_IDS
 
     async def _handle_admin(
@@ -387,7 +407,7 @@ class ConversationManager:
             svc = AdminService(session)
             csv = await svc.export_users_csv()
 
-        if csv.count("\n") <= 1:
+        if csv.count("\n") == 0:
             text = "Нет данных для экспорта."
         else:
             text = f"<b>📤 Экспорт контактов</b>\n\n<pre>{csv}</pre>"

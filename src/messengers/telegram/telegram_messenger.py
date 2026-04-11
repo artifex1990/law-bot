@@ -15,6 +15,7 @@ from aiogram.filters import Command
 from aiogram.types import (
     BotCommand,
     BotCommandScopeAllPrivateChats,
+    BotCommandScopeChat,
     CallbackQuery,
     FSInputFile,
     InlineKeyboardButton,
@@ -39,7 +40,10 @@ from src.messengers.base import (
     MediaItem,
     OutgoingMessage,
 )
-from src.services.health_service import run_ready_checks
+from src.messengers.webhook_health import (
+    SERVICE_TELEGRAM_WEBHOOK,
+    register_aiohttp_webhook_health_routes,
+)
 
 MAX_RETRIES = 3
 RETRY_BASE_DELAY = 1.0
@@ -262,19 +266,7 @@ class TelegramMessenger(AbstractMessenger):
 
         app = web.Application()
 
-        async def _health_live(_request: web.Request) -> web.Response:
-            return web.json_response(
-                {"status": "ok", "service": "telegram_webhook"},
-            )
-
-        async def _health_ready(_request: web.Request) -> web.Response:
-            data = await run_ready_checks()
-            code = 200 if data["ready"] else 503
-            payload = {**data, "service": "telegram_webhook"}
-            return web.json_response(payload, status=code)
-
-        app.router.add_get("/health/live", _health_live)
-        app.router.add_get("/health/ready", _health_ready)
+        register_aiohttp_webhook_health_routes(app, SERVICE_TELEGRAM_WEBHOOK)
 
         handler = SimpleRequestHandler(
             dispatcher=self.dp,
@@ -321,7 +313,7 @@ class TelegramMessenger(AbstractMessenger):
 
     async def _set_bot_commands(self) -> None:
         """Установить меню команд бота."""
-        commands = [
+        user_commands = [
             BotCommand(
                 command="start",
                 description="Начать консультацию",
@@ -343,10 +335,47 @@ class TelegramMessenger(AbstractMessenger):
                 description="Удалить мои данные",
             ),
         ]
+
+        default_scope = None
+        private_scope = BotCommandScopeAllPrivateChats()
+
+        for language_code in (None, "ru"):
+            await self.bot.delete_my_commands(
+                scope=default_scope, language_code=language_code
+            )
+            await self.bot.delete_my_commands(
+                scope=private_scope, language_code=language_code
+            )
+
         await self.bot.set_my_commands(
-            commands=commands,
-            scope=BotCommandScopeAllPrivateChats(),
+            commands=user_commands,
+            scope=private_scope,
         )
+        await self.bot.set_my_commands(
+            commands=user_commands,
+            scope=private_scope,
+            language_code="ru",
+        )
+        # Зафиксировать базовое меню в default scope, чтобы не подтягивались
+        # старые команды из предыдущих деплоев.
+        await self.bot.set_my_commands(commands=user_commands)
+        await self.bot.set_my_commands(
+            commands=user_commands,
+            language_code="ru",
+        )
+
+        if settings.ADMIN_IDS:
+            for admin_id in settings.ADMIN_IDS:
+                try:
+                    scope = BotCommandScopeChat(chat_id=int(admin_id))
+                    for language_code in (None, "ru"):
+                        await self.bot.delete_my_commands(
+                            scope=scope, language_code=language_code
+                        )
+                except ValueError:
+                    logger.warning(
+                        f"Invalid ADMIN_IDS value for Telegram menu: {admin_id}"
+                    )
 
     async def stop(self):
         """Остановка бота"""

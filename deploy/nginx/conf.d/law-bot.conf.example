@@ -1,0 +1,108 @@
+# Скопируйте в law-bot.conf и подставьте домен / пути.
+# Upstream-имена совпадают с docker-compose.prod.yml (service name: bot).
+
+upstream law_bot_api {
+    server bot:8080;
+}
+
+upstream law_bot_telegram {
+    server bot:8443;
+}
+
+upstream law_bot_max {
+    server bot:8444;
+}
+
+# Редирект HTTP → HTTPS (после выпуска сертификата)
+server {
+    listen 80;
+    server_name bot.example.com;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl http2;
+    server_name bot.example.com;
+
+    # Пути к сертификатам (certbot install или acme.sh --install-cert)
+    ssl_certificate /etc/nginx/ssl/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/privkey.pem;
+    ssl_session_timeout 1d;
+    ssl_session_cache shared:SSL:10m;
+
+    add_header Strict-Transport-Security "max-age=31536000" always;
+    add_header X-Content-Type-Options nosniff always;
+
+    # Интеграционное API + health/readiness (мониторинг, Uptime Kuma)
+    location /v1/ {
+        proxy_pass http://law_bot_api;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /docs {
+        proxy_pass http://law_bot_api;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /redoc {
+        proxy_pass http://law_bot_api;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location = /openapi.json {
+        proxy_pass http://law_bot_api;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+    }
+
+    # Telegram webhook (aiogram); путь = TELEGRAM_WEBHOOK_PATH, по умолчанию /webhook
+    location /webhook {
+        proxy_pass http://law_bot_telegram;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Telegram-Bot-Api-Secret-Token $http_x_telegram_bot_api_secret_token;
+    }
+
+    # MAX webhook; путь = MAX_WEBHOOK_PATH, по умолчанию /max/webhook
+    location /max/webhook {
+        proxy_pass http://law_bot_max;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Max-Bot-Api-Secret $http_x_max_bot_api_secret;
+    }
+
+    # Health MAX (внутри контейнера: /health/live, /health/ready на порту 8444).
+    # С префиксом /max/health/, чтобы не пересекаться с Telegram на том же домене.
+    location = /max/health/live {
+        proxy_pass http://law_bot_max/health/live;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+    }
+
+    location = /max/health/ready {
+        proxy_pass http://law_bot_max/health/ready;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+    }
+}

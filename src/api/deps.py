@@ -1,5 +1,6 @@
 """Зависимости FastAPI: БД и авторизация."""
 
+import hmac
 from collections.abc import AsyncGenerator
 from typing import Annotated
 
@@ -34,7 +35,19 @@ async def verify_integration_auth(
     if x_api_key:
         provided = x_api_key.strip()
 
-    if not provided or provided != expected:
+    if not provided:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or missing API token",
+        )
+    try:
+        ok = hmac.compare_digest(
+            provided.encode("utf-8"),
+            expected.encode("utf-8"),
+        )
+    except (TypeError, ValueError):
+        ok = False
+    if not ok:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or missing API token",

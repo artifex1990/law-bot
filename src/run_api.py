@@ -18,6 +18,11 @@ from src.database.base import init_db
 
 async def main() -> None:
     setup_logging(settings.LOG_LEVEL)
+    if not settings.INTEGRATION_API_TOKEN.strip():
+        logger.warning(
+            "INTEGRATION_API_TOKEN is empty: API accepts requests without auth. "
+            "Set a strong token before exposing the service.",
+        )
     logger.info(
         f"Starting Integration API on "
         f"http://{settings.API_HOST}:{settings.API_PORT}",

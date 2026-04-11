@@ -1,0 +1,69 @@
+name: Release — Docker image & optional VPS deploy
+
+on:
+  push:
+    branches: [release]
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docker-publish:
+    name: Build and push image (GHCR)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lowercase image name for GHCR
+        run: echo "IMAGE_LOWER=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ env.IMAGE_LOWER }}:latest
+            ghcr.io/${{ env.IMAGE_LOWER }}:${{ github.sha }}
+
+  deploy-vps:
+    name: Deploy on VPS (SSH)
+    needs: docker-publish
+    runs-on: ubuntu-latest
+    if: ${{ vars.SSH_DEPLOY_ENABLED == 'true' }}
+    environment: production
+    steps:
+      - name: Image ref (GHCR lower case)
+        run: echo "BOT_IMAGE_REF=ghcr.io/${GITHUB_REPOSITORY,,}:latest" >> "$GITHUB_ENV"
+
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          BOT_IMAGE_REF: ${{ env.BOT_IMAGE_REF }}
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          envs: BOT_IMAGE_REF
+          script_stop: true
+          script: |
+            set -euo pipefail
+            cd "${{ secrets.DEPLOY_PATH }}"
+            if [ -n "${{ secrets.GHCR_PULL_TOKEN }}" ]; then
+              echo "${{ secrets.GHCR_PULL_TOKEN }}" | docker login ghcr.io -u "${{ github.repository_owner }}" --password-stdin
+            fi
+            export BOT_IMAGE_REF
+            docker compose -f docker-compose.prod.yml pull bot
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            docker image prune -f
