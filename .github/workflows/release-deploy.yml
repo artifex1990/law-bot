@@ -48,7 +48,7 @@ jobs:
         run: echo "BOT_IMAGE_REF=ghcr.io/${GITHUB_REPOSITORY,,}:latest" >> "$GITHUB_ENV"
 
       - name: Deploy over SSH
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.2.5
         env:
           BOT_IMAGE_REF: ${{ env.BOT_IMAGE_REF }}
         with:
