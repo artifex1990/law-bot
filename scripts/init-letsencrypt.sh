@@ -56,11 +56,20 @@ echo ">> Домен: $DOMAIN, e-mail: $EMAIL"
 mkdir -p "$SSL_DIR"
 
 # 1. Временный самоподписанный сертификат, чтобы nginx поднялся с блоком 443 ssl.
+#    Используем хостовый openssl (есть почти везде); иначе — openssl из образа
+#    certbot через --entrypoint (у образа entrypoint=certbot, нельзя звать `sh -c`).
 if [ ! -s "$SSL_DIR/fullchain.pem" ]; then
     echo ">> Создаю временный самоподписанный сертификат..."
-    docker run --rm -v "$(pwd)/$SSL_DIR:/ssl" certbot/certbot \
-        sh -c "openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
-            -keyout /ssl/privkey.pem -out /ssl/fullchain.pem -subj '/CN=$DOMAIN'"
+    if command -v openssl >/dev/null 2>&1; then
+        openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
+            -keyout "$SSL_DIR/privkey.pem" -out "$SSL_DIR/fullchain.pem" \
+            -subj "/CN=$DOMAIN"
+    else
+        docker run --rm --entrypoint openssl \
+            -v "$(pwd)/$SSL_DIR:/ssl" certbot/certbot \
+            req -x509 -nodes -newkey rsa:2048 -days 1 \
+            -keyout /ssl/privkey.pem -out /ssl/fullchain.pem -subj "/CN=$DOMAIN"
+    fi
 fi
 
 # 2. Поднимаем nginx (он отдаёт ACME-челлендж на :80).
