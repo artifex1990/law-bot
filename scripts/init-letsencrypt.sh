@@ -18,16 +18,25 @@
 
 set -euo pipefail
 
-# Подхватываем CERTBOT_* из .env, если есть
-if [ -f .env ]; then
-    set -a
-    # shellcheck disable=SC1091
-    . ./.env
-    set +a
-fi
+# Подхватываем CERTBOT_* из .env БЕЗОПАСНО: читаем только нужные ключи,
+# не исполняя файл как shell-скрипт (значения с запятыми/пробелами/решётками
+# в .env иначе ломают `source`).
+read_env_var() {
+    local key="$1" line val
+    [ -f .env ] || return 0
+    line="$(grep -E "^[[:space:]]*${key}=" .env | tail -n 1)" || return 0
+    [ -n "$line" ] || return 0
+    val="${line#*=}"
+    # снять окружающие кавычки (одинарные/двойные)
+    val="${val%\"}"; val="${val#\"}"
+    val="${val%\'}"; val="${val#\'}"
+    printf '%s' "$val"
+}
 
-DOMAIN="${CERTBOT_DOMAIN:-max.demyanovblog.ru}"
-EMAIL="${CERTBOT_EMAIL:-}"
+# Приоритет: переменная окружения > значение из .env > дефолт
+DOMAIN="${CERTBOT_DOMAIN:-$(read_env_var CERTBOT_DOMAIN)}"
+DOMAIN="${DOMAIN:-max.demyanovblog.ru}"
+EMAIL="${CERTBOT_EMAIL:-$(read_env_var CERTBOT_EMAIL)}"
 SSL_DIR="./deploy/ssl"
 COMPOSE="docker compose -f docker-compose.prod.yml"
 
