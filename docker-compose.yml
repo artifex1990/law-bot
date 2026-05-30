@@ -39,6 +39,7 @@ services:
     ports:
       # API и health (если API_ENABLED=true); вебхуки при необходимости: 8443, 8444
       - "127.0.0.1:8080:8080"
+      - "127.0.0.1:8444:8444"
     volumes:
       - ./logs:/app/logs
       - ./backups:/app/backups

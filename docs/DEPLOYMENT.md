@@ -119,9 +119,9 @@ ssh -L 8888:127.0.0.1:8888 user@<VPS_IP>
 ## Быстрый старт на сервере
 
 1. Клонировать репозиторий.
-2. `cp env.example .env`, заполнить токены, **`DB_PASSWORD`**, вебхуки, **`BOT_IMAGE_REF`** (если образ из GHCR).
-3. `deploy/nginx/conf.d/law-bot.conf.example` → `law-bot.conf`, `server_name`, SSL.
-4. Сертификаты в `deploy/ssl/` (`fullchain.pem`, `privkey.pem`).
+2. `cp env.example .env`, заполнить токены, **`DB_PASSWORD`**, вебхуки, **`CERTBOT_EMAIL`** / **`CERTBOT_DOMAIN`**, **`BOT_IMAGE_REF`** (если образ из GHCR).
+3. Конфиг Nginx: для MAX уже готов `deploy/nginx/conf.d/max.conf`; для Telegram/API возьмите шаблон `law-bot.conf.example` → `law-bot.conf`, подставьте `server_name`.
+4. Сертификаты: **`bash scripts/init-letsencrypt.sh`** — автоматически выпускает Let's Encrypt и кладёт `fullchain.pem` / `privkey.pem` в `deploy/ssl/` (см. раздел [TLS](#tls-автоматический-выпуск-и-продление-lets-encrypt)).
 5. `docker compose -f docker-compose.prod.yml up -d --build`.
 
 Локальная сборка без registry: **`BOT_IMAGE_REF`** можно не задавать (сборка из `Dockerfile`).
@@ -142,17 +142,72 @@ ssh -L 8888:127.0.0.1:8888 user@<VPS_IP>
    - Для MAX: **`MAX_USE_WEBHOOK=true`**, **`MAX_BOT_TOKEN`**, **`MAX_WEBHOOK_URL`**, **`MAX_WEBHOOK_PATH`** (по умолчанию **`/max/webhook`**) и **`MAX_WEBHOOK_SECRET`** — согласовать с `location` в Nginx и с заголовком в примере конфига.
    - При образе из GHCR: **`BOT_IMAGE_REF=ghcr.io/...`** (см. блок в конце `env.example`).
 6. **Nginx**: `law-bot.conf.example` → `law-bot.conf` в `deploy/nginx/conf.d/`, подставить **`server_name`**, смонтировать каталог с **TLS** в `deploy/ssl/` (`fullchain.pem`, `privkey.pem` — пути как в примере).
-7. **TLS**: выпустить сертификат (Certbot webroot — в примере Nginx есть `/.well-known/acme-challenge/`; для первого выпуска может понадобиться временно поднять только HTTP и каталог с webroot). Альтернатива — **Caddy** с авто-HTTPS вместо Nginx (см. ниже).
+7. **TLS**: `bash scripts/init-letsencrypt.sh` — автоматический выпуск Let's Encrypt (webroot) с копированием PEM в `deploy/ssl/` и последующим авто-продлением сервисом `certbot` (см. раздел [TLS](#tls-автоматический-выпуск-и-продление-lets-encrypt)). Альтернатива — **Caddy** с авто-HTTPS вместо Nginx.
 8. **Запуск**: `docker compose -f docker-compose.prod.yml up -d` (при необходимости `--build`). Дождаться **`healthy`** у сервиса **`bot`** (health на **`http://127.0.0.1:8080/v1/health/live`** внутри контейнера).
 9. **Регистрация вебхуков у Telegram и MAX**: отдельно вызывать API вручную **не обязательно** — при старте приложение поднимает aiohttp на **8443** (Telegram) и **8444** (MAX) и вызывает **`set_webhook`** / подписку MAX с URL из **`build_telegram_webhook_url()`** и **`build_max_webhook_url()`** (см. `TelegramMessenger._start_webhook` и MAX-мессенджер). Убедитесь по логам `docker compose -f docker-compose.prod.yml logs -f bot`, что указан ожидаемый публичный URL и нет ошибок API.
 10. **Проверка снаружи**: `curl` к **`https://<домен>/v1/health/ready`** и при необходимости к путям health вебхуков (см. раздел «Проверка после деплоя»).
 
 Если путь или домен в `.env` меняются, после правки обычно достаточно **перезапустить контейнер бота**, чтобы перерегистрировать вебхук.
 
-## TLS
+## TLS (автоматический выпуск и продление Let's Encrypt)
 
-1. **Certbot (webroot)** — выпустить сертификат, смонтировать PEM в `deploy/ssl/`.
-2. **Caddy** — авто-HTTPS; можно заменить Nginx.
+`docker-compose.prod.yml` включает сервис **`certbot`** и каталог `deploy/ssl/`, куда попадают сертификаты. Отдельно ставить certbot на хост и запускать `certbot --nginx` **не нужно** — плагин `--nginx` управляет nginx на самом хосте, а здесь nginx работает в контейнере. Используется схема **webroot** через контейнерный nginx.
+
+Как это устроено:
+
+- В `deploy/nginx/conf.d/max.conf` блок `listen 80` отдаёт `/.well-known/acme-challenge/` из `/var/www/certbot` (volume `certbot_www`), остальное редиректит на HTTPS.
+- nginx читает сертификат из `/etc/nginx/ssl` (смонтирован `deploy/ssl`).
+- Сервис `certbot` периодически делает `certbot renew` и через `--deploy-hook` копирует свежие `fullchain.pem` / `privkey.pem` в `deploy/ssl`; nginx раз в 6 часов перечитывает их (`nginx -s reload`).
+
+### Первый выпуск
+
+1. В `.env` задайте **`CERTBOT_EMAIL`** (и при необходимости **`CERTBOT_DOMAIN`**, по умолчанию `max.demyanovblog.ru`).
+2. Убедитесь, что DNS-запись **A** домена указывает на VPS и открыты порты **80** и **443**.
+3. Из каталога с `docker-compose.prod.yml` запустите:
+
+```bash
+bash scripts/init-letsencrypt.sh
+```
+
+Скрипт создаёт временный самоподписанный сертификат (чтобы nginx стартовал с блоком 443), поднимает nginx, получает боевой сертификат через webroot, копирует PEM в `deploy/ssl/` и перезагружает nginx. Тестовый прогон без расхода лимита: `CERTBOT_STAGING=1 bash scripts/init-letsencrypt.sh`.
+
+4. Поднимите весь стек:
+
+```bash
+docker compose -f docker-compose.prod.yml up -d
+```
+
+Продление дальше автоматическое (сервис `certbot`). Проверить вручную: `docker compose -f docker-compose.prod.yml run --rm --entrypoint certbot certbot certificates`.
+
+### Альтернатива
+
+**Caddy** — авто-HTTPS «из коробки»; может заменить связку nginx + certbot.
+
+## Развёртывание только MAX (домен `max.demyanovblog.ru`)
+
+Если на этом домене работает **только** бот MAX (без Telegram и публичного API), порядок такой:
+
+1. **VPS**: установлен Docker + Docker Compose; открыты порты **22**, **80**, **443**; DNS **A** `max.demyanovblog.ru` → IP сервера.
+2. **Репозиторий**: `git clone`, перейдите в каталог с `docker-compose.prod.yml`.
+3. **`.env`** (`cp env.example .env`), минимум:
+   - `DB_PASSWORD=<надёжный пароль>`
+   - `MAX_BOT_TOKEN=<токен MAX>`
+   - `MAX_USE_WEBHOOK=true`
+   - `MAX_WEBHOOK_URL=https://max.demyanovblog.ru` (путь допишется из `MAX_WEBHOOK_PATH`)
+   - `MAX_WEBHOOK_PATH=/max/webhook`
+   - `MAX_WEBHOOK_SECRET=<длинная случайная строка>`
+   - `CERTBOT_EMAIL=<ваш e-mail>`, `CERTBOT_DOMAIN=max.demyanovblog.ru`
+   - **`TELEGRAM_BOT_TOKEN`** оставьте **пустым** — тогда Telegram-мессенджер не запускается (см. `src/main.py`), поднимется только MAX.
+4. **TLS**: `bash scripts/init-letsencrypt.sh` (см. раздел TLS выше).
+5. **Запуск**: `docker compose -f docker-compose.prod.yml up -d` (при локальной сборке добавьте `--build`).
+6. **Проверка**: дождитесь `healthy` у сервиса `bot`, затем:
+
+```bash
+curl -fsS https://max.demyanovblog.ru/max/health/ready
+docker compose -f docker-compose.prod.yml logs -f bot   # строка про MAX webhook и публичный URL
+```
+
+Бот при старте сам вызывает `subscribe_webhook` с URL из `build_max_webhook_url()` — отдельно регистрировать webhook не нужно. После смены `MAX_WEBHOOK_*` достаточно перезапустить контейнер `bot`.
 
 ## CI/CD: ветка `release`
 
@@ -185,6 +240,8 @@ docker compose -f docker-compose.prod.yml logs -f bot
 | `docker-compose.yml` | Разработка: бот + Postgres |
 | `docker-compose.prod.yml` | Продакшен: Postgres, бот, Nginx, **Uptime Kuma**, опционально Adminer |
 | `deploy/nginx/conf.d/law-bot.conf.example` | Шаблон reverse proxy (webhook Telegram/MAX, API, **`/max/health/*`**) |
+| `deploy/nginx/conf.d/max.conf` | Готовый конфиг для MAX-домена (ACME-челлендж, HTTPS, `/max/webhook`, health) |
+| `scripts/init-letsencrypt.sh` | Первый выпуск TLS-сертификата Let's Encrypt в `deploy/ssl/` |
 | `src/messengers/webhook_health.py` | Общие **`/health/live`** и **`/health/ready`** для webhook Telegram и MAX |
 | `scripts/docker-entrypoint.sh` | `alembic upgrade head`, затем запуск бота |
 | `.github/workflows/release-deploy.yml` | Ветка **release**: образ GHCR, опциональный SSH-деплой |

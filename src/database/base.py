@@ -3,6 +3,7 @@
 from collections.abc import AsyncIterator
 
 from loguru import logger
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
@@ -44,22 +45,10 @@ async def get_async_session() -> AsyncIterator[AsyncSession]:
 
 
 async def init_db() -> None:
-    """Инициализация БД - создание таблиц."""
-    from src.database.models import (  # noqa: F401
-        Chat,
-        Consultation,
-        ConversationStep,
-        Message,
-        User,
-    )
-    from src.database.models.telegram_models import (  # noqa: F401
-        TelegramChat,
-        TelegramUser,
-    )
-
+    """Проверка подключения к БД. Схема создаётся через Alembic."""
     try:
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
+        async with engine.connect() as conn:
+            await conn.execute(text("SELECT 1"))
     except Exception as e:
-        logger.error(f"Failed to create tables: {e}")
+        logger.error(f"Database connection failed: {e}")
         raise

@@ -89,6 +89,30 @@ services:
     volumes:
       - ./deploy/nginx/conf.d:/etc/nginx/conf.d:ro
       - ./deploy/ssl:/etc/nginx/ssl:ro
+      # ACME webroot для выпуска/продления сертификата Let's Encrypt
+      - certbot_www:/var/www/certbot:ro
+    # Перезагрузка раз в 6 часов — подхватывает обновлённый сертификат (certbot renew)
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - "while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g 'daemon off;'"
+    networks:
+      - bot_network
+    restart: unless-stopped
+
+  # Автоматический выпуск/продление TLS-сертификата (Let's Encrypt, webroot).
+  # Первый выпуск: scripts/init-letsencrypt.sh. Дальше контейнер сам продлевает
+  # сертификат и копирует свежие PEM в ./deploy/ssl (--deploy-hook), nginx их перечитывает.
+  certbot:
+    image: certbot/certbot
+    container_name: legal_bot_certbot
+    volumes:
+      - certbot_etc:/etc/letsencrypt
+      - certbot_var:/var/lib/letsencrypt
+      - certbot_www:/var/www/certbot
+      - ./deploy/ssl:/ssl
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - "trap exit TERM; while :; do certbot renew --deploy-hook 'cp -L /etc/letsencrypt/live/${CERTBOT_DOMAIN:-max.demyanovblog.ru}/fullchain.pem /ssl/fullchain.pem && cp -L /etc/letsencrypt/live/${CERTBOT_DOMAIN:-max.demyanovblog.ru}/privkey.pem /ssl/privkey.pem'; sleep 12h & wait $${!}; done"
     networks:
       - bot_network
     restart: unless-stopped
@@ -130,6 +154,9 @@ volumes:
   bot_logs:
   bot_backups:
   uptime_kuma_data:
+  certbot_etc:
+  certbot_var:
+  certbot_www:
 
 networks:
   bot_network:

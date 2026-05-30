@@ -4,6 +4,8 @@ Revision ID: 6e2f8ab9c123
 Revises: c1a2b3c4d5e6
 Create Date: 2026-04-07
 """
+# pylint: disable=no-member
+# op.get_bind / op.alter_column подставляются Alembic динамически
 
 from typing import Sequence, Union
 
@@ -16,7 +18,23 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
+def _column_type(table: str, column: str) -> str | None:
+    bind = op.get_bind()
+    row = bind.execute(
+        sa.text(
+            "SELECT data_type FROM information_schema.columns "
+            "WHERE table_schema = 'public' "
+            "AND table_name = :table AND column_name = :column"
+        ),
+        {"table": table, "column": column},
+    ).first()
+    return row[0] if row else None
+
+
 def upgrade() -> None:
+    if _column_type("users", "created_at") == "timestamp with time zone":
+        return
+
     # Existing values are treated as UTC and converted to timestamptz.
     op.alter_column(
         "users",

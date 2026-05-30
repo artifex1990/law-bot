@@ -19,11 +19,18 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
+def _users_column_names() -> set[str]:
+    bind = op.get_bind()
+    insp = sa.inspect(bind)
+    return {c["name"] for c in insp.get_columns("users")}
+
+
 def upgrade() -> None:
-    op.add_column(  # type: ignore[attr-defined]
-        "users",
-        sa.Column("privacy_consent_at", sa.DateTime(), nullable=True),
-    )
+    if "privacy_consent_at" not in _users_column_names():
+        op.add_column(  # type: ignore[attr-defined]
+            "users",
+            sa.Column("privacy_consent_at", sa.DateTime(), nullable=True),
+        )
 
 
 def downgrade() -> None:

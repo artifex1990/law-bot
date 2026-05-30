@@ -1,0 +1,46 @@
+# Локальный webhook MAX без выкладки на сервер.
+#
+# Идея: ngrok поднимает публичный HTTPS-туннель на стабильный домен и проксирует
+# входящие запросы в контейнер бота (bot:8444, путь MAX_WEBHOOK_PATH). MAX шлёт
+# обновления на публичный URL → ngrok → бот. TLS терминирует ngrok, локально
+# сертификаты и nginx не нужны.
+#
+# Это оверлей поверх docker-compose.yml (разработка). Запуск:
+#   docker compose -f docker-compose.yml -f docker-compose.webhook.yml up -d --build
+# Остановка:
+#   docker compose -f docker-compose.yml -f docker-compose.webhook.yml down
+#
+# Требуется в .env / .env.local (см. env.example):
+#   MAX_BOT_TOKEN     - токен бота MAX
+#   NGROK_AUTHTOKEN   - токен из https://dashboard.ngrok.com/get-started/your-authtoken
+#   NGROK_DOMAIN      - бесплатный статический домен из ngrok (Domains → создать),
+#                       например my-bot.ngrok-free.app (без https://)
+#
+# Веб-инспектор запросов ngrok: http://127.0.0.1:4040
+
+services:
+  bot:
+    # Принудительно включаем MAX webhook и подставляем публичный URL туннеля.
+    # Эти значения перекрывают .env (environment приоритетнее env_file).
+    environment:
+      MAX_USE_WEBHOOK: "true"
+      MAX_WEBHOOK_URL: "https://${NGROK_DOMAIN:?set NGROK_DOMAIN in .env}"
+      MAX_WEBHOOK_PATH: ${MAX_WEBHOOK_PATH:-/max/webhook}
+      MAX_WEBHOOK_LISTEN_HOST: 0.0.0.0
+      MAX_WEBHOOK_PORT: "8444"
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: legal_bot_ngrok
+    depends_on:
+      - bot
+    # Публичный домен → апстрим bot:8444 (HTTP внутри docker-сети)
+    command: ["http", "--domain=${NGROK_DOMAIN:?set NGROK_DOMAIN in .env}", "bot:8444"]
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:?set NGROK_AUTHTOKEN in .env}
+    ports:
+      # Локальный веб-инспектор ngrok (список запросов, повтор)
+      - "127.0.0.1:4040:4040"
+    networks:
+      - bot_network
+    restart: unless-stopped

@@ -30,11 +30,18 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
+        if_not_exists=True,
     )
     op.create_index(
-        op.f("ix_users_messenger_user_id"), "users", ["messenger_user_id"], unique=False
+        op.f("ix_users_messenger_user_id"),
+        "users",
+        ["messenger_user_id"],
+        unique=False,
+        if_not_exists=True,
     )
-    op.create_index(op.f("ix_users_email"), "users", ["email"], unique=False)
+    op.create_index(
+        op.f("ix_users_email"), "users", ["email"], unique=False, if_not_exists=True
+    )
 
     op.create_table(
         "chats",
@@ -49,8 +56,11 @@ def upgrade() -> None:
             ["users.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
+        if_not_exists=True,
     )
-    op.create_index(op.f("ix_chats_user_id"), "chats", ["user_id"], unique=False)
+    op.create_index(
+        op.f("ix_chats_user_id"), "chats", ["user_id"], unique=False, if_not_exists=True
+    )
 
     op.create_table(
         "consultations",
@@ -75,12 +85,21 @@ def upgrade() -> None:
             ["users.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
+        if_not_exists=True,
     )
     op.create_index(
-        op.f("ix_consultations_chat_id"), "consultations", ["chat_id"], unique=False
+        op.f("ix_consultations_chat_id"),
+        "consultations",
+        ["chat_id"],
+        unique=False,
+        if_not_exists=True,
     )
     op.create_index(
-        op.f("ix_consultations_user_id"), "consultations", ["user_id"], unique=False
+        op.f("ix_consultations_user_id"),
+        "consultations",
+        ["user_id"],
+        unique=False,
+        if_not_exists=True,
     )
 
     op.create_table(
@@ -95,12 +114,14 @@ def upgrade() -> None:
             ["chats.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
+        if_not_exists=True,
     )
     op.create_index(
         op.f("ix_conversation_steps_chat_id"),
         "conversation_steps",
         ["chat_id"],
         unique=False,
+        if_not_exists=True,
     )
 
     op.create_table(
@@ -116,8 +137,15 @@ def upgrade() -> None:
             ["chats.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
+        if_not_exists=True,
     )
-    op.create_index(op.f("ix_messages_chat_id"), "messages", ["chat_id"], unique=False)
+    op.create_index(
+        op.f("ix_messages_chat_id"),
+        "messages",
+        ["chat_id"],
+        unique=False,
+        if_not_exists=True,
+    )
 
     op.create_table(
         "telegram_users",
@@ -135,12 +163,14 @@ def upgrade() -> None:
             ["users.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
+        if_not_exists=True,
     )
     op.create_index(
         op.f("ix_telegram_users_telegram_id"),
         "telegram_users",
         ["telegram_id"],
         unique=True,
+        if_not_exists=True,
     )
 
     op.create_table(
@@ -155,12 +185,14 @@ def upgrade() -> None:
             ["chats.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
+        if_not_exists=True,
     )
     op.create_index(
         op.f("ix_telegram_chats_telegram_chat_id"),
         "telegram_chats",
         ["telegram_chat_id"],
         unique=True,
+        if_not_exists=True,
     )
 
 

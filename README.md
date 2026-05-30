@@ -349,6 +349,40 @@ python -m src.main
 
 При штатной остановке процесса вызывается **`delete_webhook`** для MAX. Чтобы снова перейти на **long polling**, установите **`MAX_USE_WEBHOOK=False`** и перезапустите процесс.
 
+#### Локальный webhook MAX через ngrok (без сервера)
+
+Чтобы принимать webhook MAX **на своём компьютере** через Docker, не выкладывая стек на VPS, используйте туннель **ngrok**: он даёт публичный HTTPS-URL и проксирует запросы в контейнер бота (`bot:8444`). Готовый оверлей — **`docker-compose.webhook.yml`** (поверх `docker-compose.yml`).
+
+1. Зарегистрируйтесь на [ngrok](https://dashboard.ngrok.com), скопируйте **authtoken** и создайте бесплатный **статический домен** (Dashboard → **Domains**), например `my-bot.ngrok-free.app`.
+2. В `.env` / `.env.local` задайте:
+
+```env
+MAX_BOT_TOKEN=токен_бота_MAX
+NGROK_AUTHTOKEN=ваш_authtoken
+NGROK_DOMAIN=my-bot.ngrok-free.app
+# MAX_WEBHOOK_PATH=/max/webhook   # по умолчанию
+# MAX_WEBHOOK_SECRET=...          # опционально
+```
+
+`MAX_USE_WEBHOOK=true` и `MAX_WEBHOOK_URL=https://$NGROK_DOMAIN` оверлей подставляет сам — отдельно прописывать не нужно.
+
+3. Запустите:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.webhook.yml up -d --build
+docker compose -f docker-compose.yml -f docker-compose.webhook.yml logs -f bot
+```
+
+В логах бота должна появиться строка про **MAX webhook** и публичный URL `https://my-bot.ngrok-free.app/max/webhook`. Входящие запросы видно в веб-инспекторе ngrok на **`http://127.0.0.1:4040`**. Напишите боту в MAX — ответ придёт без long polling.
+
+4. Остановка:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.webhook.yml down
+```
+
+Стабильный домен ngrok важен: бот вызывает `subscribe_webhook` на старте, и при случайном URL пришлось бы менять конфиг при каждом запуске. Бесплатный статический домен снимает эту проблему. Telegram при этом удобнее держать в long polling (`TELEGRAM_USE_WEBHOOK=False`) — туннель настроен на порт MAX (**8444**).
+
 #### Оба мессенджера (Telegram + MAX) в webhook
 
 | Сервис | Переменная порта | Пример пути | Backend в Nginx |
